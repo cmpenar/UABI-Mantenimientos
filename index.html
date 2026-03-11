@@ -371,8 +371,11 @@
 </div>
 
 <script>
-  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSaSFkVYifCJXUDyIC0tgtAneR1VbJJF-9swvQYnCDLkEfdC8ovezSK5HZrISwu2nk_NgvdzaIDT-Mj/pub?gid=0&single=true&output=csv";
+  const DATA_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSaSFkVYifCJXUDyIC0tgtAneR1VbJJF-9swvQYnCDLkEfdC8ovezSK5HZrISwu2nk_NgvdzaIDT-Mj/pub?gid=0&single=true&output=csv";
+  const POINTS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSaSFkVYifCJXUDyIC0tgtAneR1VbJJF-9swvQYnCDLkEfdC8ovezSK5HZrISwu2nk_NgvdzaIDT-Mj/pub?gid=1586736370&single=true&output=csv";
+
   let data = [];
+  let pointsData = [];
 
   function el(id){ return document.getElementById(id); }
   const COP = new Intl.NumberFormat("es-CO", { style:"currency", currency:"COP", maximumFractionDigits:0 });
@@ -472,6 +475,10 @@
     return Number.isFinite(n) ? n : t;
   }
 
+  function cleanText(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
   function getPctValue(row) {
     let pct =
       row.pct_ejecucion ??
@@ -559,6 +566,7 @@
         row.contrato_numero ||
         row.numero_contrato ||
         row.nro_contrato ||
+        row.id_contrato ||
         "—",
 
       ano:
@@ -628,41 +636,99 @@
         row.prorroga ||
         row.prorrogas ||
         row.prorroga_suspensiones ||
-        "",
-
-      lat:
-        Number(String(
-          row.lat ||
-          row.latitude ||
-          row.latitud ||
-          ""
-        ).replace(",", ".")),
-
-      lon:
-        Number(String(
-          row.lon ||
-          row.lng ||
-          row.longitud ||
-          row.longitude ||
-          ""
-        ).replace(",", "."))
+        ""
     };
   }
 
-  async function loadData() {
-    const res = await fetch(CSV_URL, { cache: "no-store" });
-    if (!res.ok) throw new Error(`No se pudo cargar el CSV (${res.status})`);
+  function mapPointRow(row) {
+    return {
+      contrato:
+        row.contrato ||
+        row.contrato_no ||
+        row.contrato_numero ||
+        row.numero_contrato ||
+        row.nro_contrato ||
+        row.id_contrato ||
+        "—",
 
-    const csvText = await res.text();
+      lat: Number(String(
+        row.lat ||
+        row.latitude ||
+        row.latitud ||
+        row.y ||
+        ""
+      ).replace(",", ".")),
+
+      lon: Number(String(
+        row.lon ||
+        row.lng ||
+        row.longitud ||
+        row.longitude ||
+        row.x ||
+        ""
+      ).replace(",", ".")),
+
+      nombre_punto:
+        row.nombre_punto ||
+        row.nombre ||
+        row.sitio ||
+        row.ubicacion ||
+        "",
+
+      direccion:
+        row.direccion ||
+        row.address ||
+        "",
+
+      barrio:
+        row.barrio ||
+        "",
+
+      comuna:
+        row.comuna ||
+        ""
+    };
+  }
+
+  function parseSheet(csvText, mapper) {
     const rows = parseCSV(csvText);
-    if (!rows.length) throw new Error("El CSV llegó vacío");
+    if (!rows.length) return [];
 
     const headers = rows[0].map(normalizeKey);
-    data = rows.slice(1).map(cols => {
+
+    return rows.slice(1).map(cols => {
       const raw = {};
       headers.forEach((h, idx) => raw[h] = cols[idx] ?? "");
-      return mapRow(raw);
-    }).filter(r => String(r.contrato).trim() !== "" && String(r.contrato).trim() !== "—");
+      return mapper(raw);
+    }).filter(r =>
+      Object.values(r).some(v => String(v ?? "").trim() !== "")
+    );
+  }
+
+  async function loadData() {
+    const [dataRes, pointsRes] = await Promise.all([
+      fetch(DATA_CSV_URL, { cache: "no-store" }),
+      fetch(POINTS_CSV_URL, { cache: "no-store" })
+    ]);
+
+    if (!dataRes.ok) throw new Error(`No se pudo cargar el CSV de datos (${dataRes.status})`);
+    if (!pointsRes.ok) throw new Error(`No se pudo cargar el CSV de puntos (${pointsRes.status})`);
+
+    const [dataCsvText, pointsCsvText] = await Promise.all([
+      dataRes.text(),
+      pointsRes.text()
+    ]);
+
+    data = parseSheet(dataCsvText, mapRow)
+      .filter(r => String(r.contrato).trim() !== "" && String(r.contrato).trim() !== "—");
+
+    pointsData = parseSheet(pointsCsvText, mapPointRow)
+      .filter(r =>
+        String(r.contrato).trim() !== "" &&
+        String(r.contrato).trim() !== "—" &&
+        Number.isFinite(r.lat) &&
+        Number.isFinite(r.lon)
+      );
   }
 
   let mapaGeneral;
@@ -683,7 +749,25 @@
     if (!mapaGeneral) initMap();
     markersLayer.clearLayers();
 
-    const puntos = rows.filter(r => Number.isFinite(r.lat) && Number.isFinite(r.lon) && r.lat && r.lon);
+    const contratosFiltrados = new Map(
+      rows.map(r => [cleanText(r.contrato), r])
+    );
+
+    const puntos = pointsData
+      .filter(p => contratosFiltrados.has(cleanText(p.contrato)))
+      .map(p => {
+        const contratoData = contratosFiltrados.get(cleanText(p.contrato));
+        return {
+          ...contratoData,
+          lat: p.lat,
+          lon: p.lon,
+          nombre_punto: p.nombre_punto,
+          direccion: p.direccion,
+          barrio: p.barrio,
+          comuna: p.comuna
+        };
+      });
+
     puntos.forEach(r => {
       const marker = L.circleMarker([r.lat, r.lon], {
         radius: 7,
@@ -696,6 +780,10 @@
         <strong>Equipo:</strong> ${r.equipo}<br>
         <strong>Contratista:</strong> ${r.contratista}<br>
         <strong>Estado:</strong> ${r.estado}<br>
+        ${r.nombre_punto ? `<strong>Punto:</strong> ${r.nombre_punto}<br>` : ""}
+        ${r.direccion ? `<strong>Dirección:</strong> ${r.direccion}<br>` : ""}
+        ${r.barrio ? `<strong>Barrio:</strong> ${r.barrio}<br>` : ""}
+        ${r.comuna ? `<strong>Comuna:</strong> ${r.comuna}<br>` : ""}
         <strong>Valor total:</strong> ${COP.format(Number(r.valor_total || 0))}<br>
         <strong>% ejecución:</strong> ${(Number(r.pct_ejecucion || 0) * 100).toFixed(1)}%
       `);
@@ -1058,7 +1146,6 @@
   });
 
   function fmtDate(s){ return s || "—"; }
-  function fmtNum(n){ return COP.format(Number(n || 0)); }
 
   function abrirHistorial(contratoId){
     const id = decodeURIComponent(String(contratoId || "")).trim();
@@ -1067,6 +1154,7 @@
 
     const overlay = el("modalOverlay");
     const body = el("modalBody");
+    el("modalTitle").textContent = "Detalle del contrato";
     el("modalSub").textContent = `Contrato: ${r.contrato} · Año: ${r.ano ?? "—"} · Estado: ${r.estado || "—"}`;
 
     const pct = Math.max(0, Math.min(1, Number(r.pct_ejecucion||0)));
@@ -1078,36 +1166,40 @@
         <div class="kv">
           <div class="k">Contrato</div><div class="v mono">${r.contrato}</div>
           <div class="k">Equipo</div><div class="v">${r.equipo}</div>
-          <div class="k">Contratista</div><div class="v">${r.contratista}</div>
-          <div class="k">Objeto</div><div class="v">${r.objeto}</div>
           <div class="k">Tipo</div><div class="v">${r.tipo}</div>
-          <div class="k">Financiación</div><div class="v">${r.financiacion}</div>
+          <div class="k">Contratista</div><div class="v">${r.contratista}</div>
           <div class="k">Estado</div><div class="v">${r.estado}</div>
+          <div class="k">Financiación</div><div class="v">${r.financiacion}</div>
+          <div class="k">Objeto</div><div class="v">${r.objeto}</div>
+          <div class="k">Valor total</div><div class="v mono">${COP.format(Number(r.valor_total || 0))}</div>
+          <div class="k">Valor ejecutado</div><div class="v mono">${COP.format(Number(r.valor_ejecutado || 0))}</div>
+          <div class="k">% ejecución</div><div class="v mono">${pctTxt}</div>
           <div class="k">Fecha inicio</div><div class="v">${fmtDate(r.fecha_inicio)}</div>
           <div class="k">Fecha fin</div><div class="v">${fmtDate(r.fecha_fin)}</div>
-          <div class="k">Valor total</div><div class="v mono">${fmtNum(r.valor_total)}</div>
-          <div class="k">Valor ejecutado</div><div class="v mono">${fmtNum(r.valor_ejecutado)}</div>
-          <div class="k">Por ejecutar</div><div class="v mono">${fmtNum(r.valor_por_ejecutar)}</div>
-          <div class="k">% ejecución</div>
-          <div class="v">
-            <div class="progressText mono">${pctTxt}</div>
-            <div class="progress">
-              <div class="progressTrack">
-                <div class="progressFill" style="width:${pctTxt}"></div>
-              </div>
-            </div>
-          </div>
+          <div class="k">Plazo</div><div class="v">${r.plazo || "—"}</div>
+          <div class="k">Prórroga</div><div class="v">${r.prorroga || "—"}</div>
         </div>
       </div>
+
       <div class="detailCard">
         <h4>Resumen</h4>
         <div class="timeline">
-          <div class="tlItem"><div class="tlDate">Contrato</div><div class="tlBox mono">${r.contrato}</div></div>
-          <div class="tlItem"><div class="tlDate">Inicio</div><div class="tlBox">${fmtDate(r.fecha_inicio)}</div></div>
-          <div class="tlItem"><div class="tlDate">Fin</div><div class="tlBox">${fmtDate(r.fecha_fin)}</div></div>
-          <div class="tlItem"><div class="tlDate">Estado</div><div class="tlBox">${r.estado || "—"}</div></div>
-          <div class="tlItem"><div class="tlDate">Financiación</div><div class="tlBox">${r.financiacion || "—"}</div></div>
-          <div class="tlItem"><div class="tlDate">Tipo</div><div class="tlBox">${r.tipo || "—"}</div></div>
+          <div class="tlItem">
+            <div class="tlDate">Inicio</div>
+            <div class="tlBox">${fmtDate(r.fecha_inicio)}</div>
+          </div>
+          <div class="tlItem">
+            <div class="tlDate">Fin</div>
+            <div class="tlBox">${fmtDate(r.fecha_fin)}</div>
+          </div>
+          <div class="tlItem">
+            <div class="tlDate">Estado</div>
+            <div class="tlBox">${r.estado || "—"}</div>
+          </div>
+          <div class="tlItem">
+            <div class="tlDate">Ejecución</div>
+            <div class="tlBox">${pctTxt}</div>
+          </div>
         </div>
       </div>
     `;
@@ -1118,65 +1210,73 @@
 
   function cerrarHistorial(){
     const overlay = el("modalOverlay");
-    if (!overlay) return;
     overlay.classList.remove("show");
     overlay.setAttribute("aria-hidden", "true");
   }
 
-  async function bootstrap(){
-    try {
-      await loadData();
-      fillFilters();
-      refreshCascadeOptions();
-
-      const anoSel = el("filterAno");
-      if ([...anoSel.options].some(o => o.value === DEFAULT_ANO)) {
-        [...anoSel.options].forEach(o => o.selected = (o.value === DEFAULT_ANO));
-      }
-
-      ["filterEquipo","filterAno","filterEstado","filterContratista","filterFinanciacion"].forEach(initMultiSelect);
-      ["filterEquipo","filterAno","filterContratista","filterEstado","filterFinanciacion"].forEach(id=> el(id).addEventListener("change", render));
-      el("searchBox").addEventListener("input", render);
-
-      const overlay = el("modalOverlay");
-      if (overlay) {
-        overlay.addEventListener("click", (e)=>{
-          if (e.target.id === "modalOverlay") cerrarHistorial();
-        });
-      }
-
-      render();
-    } catch (error) {
-      console.error(error);
-      const main = document.querySelector("main .wrap") || document.body;
-      const err = document.createElement("div");
-      err.className = "card";
-      err.style.padding = "18px";
-      err.style.marginBottom = "18px";
-      err.innerHTML = `<strong>No se pudieron cargar los datos.</strong><div style="margin-top:8px;color:#6B7280">${error.message}</div>`;
-      main.prepend(err);
-    }
-  }
-
   function resetearTodo(){
-    location.reload();
+    ["filterEquipo","filterAno","filterEstado","filterContratista","filterFinanciacion"].forEach(id=>{
+      const sel = el(id);
+      [...sel.options].forEach(o => o.selected = (o.value === "Todos"));
+      const root = document.querySelector(`.ms[data-for="${id}"]`);
+      if (root && root._renderMenu) {
+        root._renderMenu();
+        root._setLabel();
+      }
+    });
+
+    el("searchBox").value = "";
+
+    if ([...el("filterAno").options].some(o => o.value === DEFAULT_ANO)) {
+      [...el("filterAno").options].forEach(o => o.selected = (o.value === DEFAULT_ANO));
+      const root = document.querySelector(`.ms[data-for="filterAno"]`);
+      if (root && root._renderMenu) {
+        root._renderMenu();
+        root._setLabel();
+      }
+    }
+
+    render();
   }
 
-  document.addEventListener("click", (e)=>{
-    const btn = e.target.closest("button[data-contrato]");
-    if (!btn) return;
-    e.preventDefault();
-    abrirHistorial(btn.getAttribute("data-contrato") || "");
-  });
+  async function init(){
+    await loadData();
+    fillFilters();
 
-  document.addEventListener("keydown", (e)=>{
-    if (e.key === "Escape") cerrarHistorial();
-  });
+    ["filterEquipo","filterAno","filterEstado","filterContratista","filterFinanciacion"].forEach(initMultiSelect);
 
-  window.addEventListener("DOMContentLoaded", () => {
-    bootstrap();
+    ["filterEquipo","filterAno","filterEstado","filterContratista","filterFinanciacion"].forEach(id=>{
+      el(id).addEventListener("change", render);
+    });
+
+    el("searchBox").addEventListener("input", render);
+
+    el("tbody").addEventListener("click", (e)=>{
+      const btn = e.target.closest("button[data-contrato]");
+      if (!btn) return;
+      abrirHistorial(btn.dataset.contrato);
+    });
+
+    el("modalOverlay").addEventListener("click", (e)=>{
+      if (e.target === el("modalOverlay")) cerrarHistorial();
+    });
+
+    if ([...el("filterAno").options].some(o => o.value === DEFAULT_ANO)) {
+      [...el("filterAno").options].forEach(o => o.selected = (o.value === DEFAULT_ANO));
+      const root = document.querySelector(`.ms[data-for="filterAno"]`);
+      if (root && root._renderMenu) {
+        root._renderMenu();
+        root._setLabel();
+      }
+    }
+
+    render();
+  }
+
+  init().catch(err => {
+    console.error(err);
+    alert("Error cargando datos: " + err.message);
   });
 </script>
-
 </body>
 </html>
