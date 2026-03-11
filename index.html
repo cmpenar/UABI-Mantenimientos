@@ -17,7 +17,6 @@
       --text:#1F2937;
       --muted:#6B7280;
       --shadow: 0 10px 25px rgba(17,24,39,0.08);
-      --accent: var(--brand-blue);
     }
     *{box-sizing:border-box}
     body{
@@ -114,7 +113,6 @@
     .right{text-align:right}
     .mono{font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1;}
     .chip{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--stroke); border-radius:999px; padding:4px 8px; font-size:12px; background:#fff}
-    .muted{color:var(--muted)}
     .footer{max-width:1200px; margin: 0 auto 18px; padding:0 18px; color:#6B7280; font-size:12px; display:flex; align-items:center; gap:10px; justify-content:center; flex-direction:column;}
     .footer img{width:180px; opacity:0.95}
     .toolbar{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
@@ -365,6 +363,7 @@
     return String(str || "")
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
+      .replace(/%/g, "")
       .trim()
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "_")
@@ -375,14 +374,58 @@
     if (value == null) return 0;
     const raw = String(value).trim();
     if (!raw) return 0;
-    const cleaned = raw.replace(/\$/g, "").replace(/\s/g, "").replace(/\./g, "").replace(/,/g, ".");
+    const cleaned = raw
+      .replace(/\$/g, "")
+      .replace(/\s/g, "")
+      .replace(/\./g, "")
+      .replace(/,/g, ".");
     const n = Number(cleaned);
     return Number.isFinite(n) ? n : 0;
   }
 
   function toYear(value) {
-    const n = Number(String(value || "").trim());
-    return Number.isFinite(n) ? n : (value || "");
+    const t = String(value || "").trim();
+    const n = Number(t);
+    return Number.isFinite(n) ? n : t;
+  }
+
+  function getPctValue(row) {
+    let pct =
+      row.pct_ejecucion ??
+      row.porcentaje_ejecucion ??
+      row.de_ejecucion ??
+      row.ejecucion_pct ??
+      row.ejecucion ??
+      row.porcentaje;
+
+    if (pct === undefined || pct === null || String(pct).trim() === "") {
+      const total = toNumber(row.valor_total || row.valor || row.valor_contrato || row.valor_total_contrato);
+      const ejecutado = toNumber(row.valor_ejecutado || row.ejecutado || row.valor_ejecutado_acumulado || row.ejecucion_financiera);
+      return total > 0 ? ejecutado / total : 0;
+    }
+
+    const raw = String(pct).trim();
+
+    if (raw.includes(".")) {
+      const direct = Number(raw);
+      if (Number.isFinite(direct)) {
+        return direct > 1 ? direct / 100 : direct;
+      }
+    }
+
+    const normalized = raw
+      .replace("%", "")
+      .replace(/\./g, "")
+      .replace(/,/g, ".");
+    const n = Number(normalized);
+
+    if (!Number.isFinite(n)) {
+      const total = toNumber(row.valor_total || row.valor || row.valor_contrato || row.valor_total_contrato);
+      const ejecutado = toNumber(row.valor_ejecutado || row.ejecutado || row.valor_ejecutado_acumulado || row.ejecucion_financiera);
+      return total > 0 ? ejecutado / total : 0;
+    }
+
+    return n > 1 ? n / 100 : n;
   }
 
   function mapRow(row) {
@@ -394,15 +437,10 @@
       ano: toYear(row.ano || row.anio || row.vigencia),
       contratista: row.contratista || row.nombre_contratista || "—",
       objeto: row.objeto || row.descripcion || "—",
-      valor_total: toNumber(row.valor_total || row.valor || row.valor_contrato),
-      valor_ejecutado: toNumber(row.valor_ejecutado || row.ejecutado),
+      valor_total: toNumber(row.valor_total || row.valor || row.valor_contrato || row.valor_total_contrato),
+      valor_ejecutado: toNumber(row.valor_ejecutado || row.ejecutado || row.valor_ejecutado_acumulado || row.ejecucion_financiera),
       valor_por_ejecutar: toNumber(row.valor_por_ejecutar || row.por_ejecutar),
-      pct_ejecucion: (() => {
-        const pct = row.pct_ejecucion || row.porcentaje_ejecucion || row._ejecucion || row.ejecucion_pct;
-        const n = Number(String(pct || "").replace("%", "").replace(",", "."));
-        if (!Number.isFinite(n)) return 0;
-        return n > 1 ? n / 100 : n;
-      })(),
+      pct_ejecucion: getPctValue(row),
       estado: row.estado || "—",
       fecha_inicio: row.fecha_inicio || row.inicio || "",
       fecha_fin: row.fecha_fin || row.fin || "",
@@ -458,7 +496,8 @@
         <strong>Equipo:</strong> ${r.equipo}<br>
         <strong>Contratista:</strong> ${r.contratista}<br>
         <strong>Estado:</strong> ${r.estado}<br>
-        <strong>Valor total:</strong> ${COP.format(Number(r.valor_total || 0))}
+        <strong>Valor total:</strong> ${COP.format(Number(r.valor_total || 0))}<br>
+        <strong>% ejecución:</strong> ${(Number(r.pct_ejecucion || 0) * 100).toFixed(1)}%
       `);
       markersLayer.addLayer(marker);
     });
@@ -658,6 +697,9 @@
     tb.innerHTML = "";
 
     rows.forEach(r => {
+      const pct = Math.max(0, Math.min(1, Number(r.pct_ejecucion || 0)));
+      const pctTxt = (pct * 100).toFixed(1);
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td class="mono">${r.contrato}</td>
@@ -667,7 +709,14 @@
         <td><span class="chip">${r.estado || "—"}</span></td>
         <td class="right mono">${COP.format(Number(r.valor_total||0))}</td>
         <td class="right mono">${COP.format(Number(r.valor_ejecutado||0))}</td>
-        <td class="right mono" style="text-align:center">${(() => { const p = Math.max(0, Math.min(1, Number(r.pct_ejecucion||0))); const pct = (p*100).toFixed(1); return `<div class="progress"><div class="progressText mono">${pct}%</div><div class="progressTrack"><div class="progressFill" style="width:${pct}%"></div></div></div>`; })()}</td>
+        <td class="right mono" style="text-align:center">
+          <div class="progress">
+            <div class="progressText mono">${pctTxt}%</div>
+            <div class="progressTrack">
+              <div class="progressFill" style="width:${pctTxt}%"></div>
+            </div>
+          </div>
+        </td>
         <td><button class="btn" type="button" data-contrato="${encodeURIComponent(r.contrato)}">📚 Historial</button></td>
       `;
       tb.appendChild(tr);
