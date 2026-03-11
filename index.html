@@ -105,7 +105,7 @@
     .panel h3{margin:0 0 10px; font-size:14px}
     .panel .meta{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; color:var(--muted); font-size:12px}
     .tableWrap{margin-top:14px; overflow:auto;}
-    table{width:100%; border-collapse:collapse; min-width:1000px;}
+    table{width:100%; border-collapse:collapse; min-width:1100px;}
     th, td{padding:10px 12px; border-bottom:1px solid rgba(17,24,39,0.06); vertical-align:middle;}
     th{font-size:12px; color:var(--muted); text-align:left; position:sticky; top:0; background:var(--surface); z-index:1}
     td{font-size:13px;}
@@ -128,7 +128,7 @@
     .progressFill{height:8px; background: linear-gradient(90deg, var(--brand-blue), #47C9D7); border-radius:999px;}
     .progressText{font-size:12px; color:var(--muted); margin-bottom:4px;}
     #mapaGeneral{height: 340px; border-radius:14px; overflow:hidden; border:1px solid var(--stroke);}
-    .wrapCell{max-width: 320px; white-space: normal; line-height:1.25}
+    .wrapCell{max-width: 360px; white-space: normal; line-height:1.25}
 
     .ms{position:relative; width:100%;}
     .msBtn{
@@ -152,7 +152,7 @@
     }
     .modalOverlay.show{display:flex;}
     .modalCard{
-      width:min(980px, 100%); max-height:90vh; overflow:auto;
+      width:min(1100px, 100%); max-height:90vh; overflow:auto;
       background:#fff; border:1px solid var(--stroke); border-radius:18px; box-shadow:var(--shadow);
     }
     .modalHeader{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px 18px; border-bottom:1px solid rgba(17,24,39,0.08); position:sticky; top:0; background:#fff; z-index:2;}
@@ -419,7 +419,6 @@
     }
 
     const raw = String(pct).trim();
-
     const direct = Number(raw.replace(",", "."));
     if (Number.isFinite(direct)) {
       return direct > 1 ? direct / 100 : direct;
@@ -462,10 +461,12 @@
 
       tipo:
         row.tipo ||
+        row.tipo_de_contrato ||
         row.clase ||
         "—",
 
       financiacion:
+        row.tipo_de_financiacion ||
         row.financiacion ||
         row.fuente_de_financiacion ||
         row.financiacion_fuente ||
@@ -1004,6 +1005,7 @@
           <div class="tlItem"><div class="tlDate">Fin</div><div class="tlBox">${fmtDate(r.fecha_fin)}</div></div>
           <div class="tlItem"><div class="tlDate">Estado</div><div class="tlBox">${r.estado || "—"}</div></div>
           <div class="tlItem"><div class="tlDate">Financiación</div><div class="tlBox">${r.financiacion || "—"}</div></div>
+          <div class="tlItem"><div class="tlDate">Tipo</div><div class="tlBox">${r.tipo || "—"}</div></div>
         </div>
       </div>
     `;
