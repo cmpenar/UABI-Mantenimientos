@@ -9,14 +9,13 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     :root{
-      --brand-blue:#2BA7B5; /* azul tipo el de la imagen */
+      --brand-blue:#2BA7B5;
       --brand-purple:#6B2C90;
-
-      --bg:#F7F4EC; /* arena claro */
+      --bg:#F7F4EC;
       --surface:#FFFFFF;
       --stroke: rgba(17,24,39,0.10);
       --text:#1F2937;
-      --muted:#6B7280; /* gris medio */
+      --muted:#6B7280;
       --shadow: 0 10px 25px rgba(17,24,39,0.08);
       --accent: var(--brand-blue);
     }
@@ -115,7 +114,6 @@
     .right{text-align:right}
     .mono{font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1;}
     .chip{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--stroke); border-radius:999px; padding:4px 8px; font-size:12px; background:#fff}
-    .legendDot{width:9px; height:9px; border-radius:999px; display:inline-block}
     .muted{color:var(--muted)}
     .footer{max-width:1200px; margin: 0 auto 18px; padding:0 18px; color:#6B7280; font-size:12px; display:flex; align-items:center; gap:10px; justify-content:center; flex-direction:column;}
     .footer img{width:180px; opacity:0.95}
@@ -274,6 +272,24 @@
     </section>
   </div>
 </main>
+
+<footer class="footer">
+  <img src="https://cdnwordpresstest-f0ekdgevcngegudb.z01.azurefd.net/es/wp-content/themes/theme_alcaldia/img/logo_2022.png" alt="Alcaldía de Medellín">
+  <div class="caption">Secretaría de suministros y servicios</div>
+</footer>
+
+<div id="modalOverlay" class="modalOverlay" aria-hidden="true">
+  <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modalHeader">
+      <div>
+        <div id="modalTitle" class="modalTitle">Detalle del contrato</div>
+        <div id="modalSub" class="modalSub">—</div>
+      </div>
+      <button class="modalClose" type="button" aria-label="Cerrar" onclick="cerrarHistorial()">✕</button>
+    </div>
+    <div id="modalBody" class="modalBody"></div>
+  </div>
+</div>
 
 <script>
   const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSaSFkVYifCJXUDyIC0tgtAneR1VbJJF-9swvQYnCDLkEfdC8ovezSK5HZrISwu2nk_NgvdzaIDT-Mj/pub?gid=0&single=true&output=csv";
@@ -826,6 +842,7 @@
 
   function cerrarHistorial(){
     const overlay = el("modalOverlay");
+    if (!overlay) return;
     overlay.classList.remove("show");
     overlay.setAttribute("aria-hidden", "true");
   }
@@ -844,6 +861,14 @@
       ["filterEquipo","filterAno","filterEstado","filterContratista","filterFinanciacion"].forEach(initMultiSelect);
       ["filterEquipo","filterAno","filterContratista","filterEstado","filterFinanciacion"].forEach(id=> el(id).addEventListener("change", render));
       el("searchBox").addEventListener("input", render);
+
+      const overlay = el("modalOverlay");
+      if (overlay) {
+        overlay.addEventListener("click", (e)=>{
+          if (e.target.id === "modalOverlay") cerrarHistorial();
+        });
+      }
+
       render();
     } catch (error) {
       console.error(error);
@@ -868,34 +893,14 @@
     abrirHistorial(btn.getAttribute("data-contrato") || "");
   });
 
-  el("modalOverlay").addEventListener("click", (e)=>{
-    if (e.target.id === "modalOverlay") cerrarHistorial();
-  });
-
   document.addEventListener("keydown", (e)=>{
     if (e.key === "Escape") cerrarHistorial();
   });
 
-  bootstrap();
+  window.addEventListener("DOMContentLoaded", () => {
+    bootstrap();
+  });
 </script>
-
-<footer class="footer">
-  <img src="https://cdnwordpresstest-f0ekdgevcngegudb.z01.azurefd.net/es/wp-content/themes/theme_alcaldia/img/logo_2022.png" alt="Alcaldía de Medellín">
-  <div class="caption">Secretaría de suministros y servicios</div>
-</footer>
-
-<div id="modalOverlay" class="modalOverlay" aria-hidden="true">
-  <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modalHeader">
-      <div>
-        <div id="modalTitle" class="modalTitle">Detalle del contrato</div>
-        <div id="modalSub" class="modalSub">—</div>
-      </div>
-      <button class="modalClose" type="button" aria-label="Cerrar" onclick="cerrarHistorial()">✕</button>
-    </div>
-    <div id="modalBody" class="modalBody"></div>
-  </div>
-</div>
 
 </body>
 </html>
