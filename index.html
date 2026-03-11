@@ -120,16 +120,13 @@
       display:flex;
       flex-direction:column;
     }
-
     .panel h3{margin:0 0 10px; font-size:14px}
     .panel .meta{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; color:var(--muted); font-size:12px}
-
     .panel canvas{
       flex:1;
       width:100% !important;
       max-height:260px !important;
     }
-
     #chartEstado,
     #chartEquipo{
       height:260px !important;
@@ -174,7 +171,6 @@
       min-height:24px;
     }
     .msBtn .ph{color:#4B5563}
-
     .msMenu{
       position:absolute;
       top:calc(100% + 8px);
@@ -192,7 +188,6 @@
       padding:6px 0;
     }
     .ms.open .msMenu{display:block;}
-
     .msItem{
       display:flex;
       align-items:center;
@@ -301,7 +296,7 @@
       <div class="card kpi"><div class="label">Total contratos</div><div id="kpiTotal" class="value">0</div><div class="mini">Registros filtrados</div></div>
       <div class="card kpi"><div class="label">Valor total</div><div id="kpiValorTotal" class="value mono">$0</div><div class="mini">Suma del valor contractual</div></div>
       <div class="card kpi"><div class="label">Valor ejecutado</div><div id="kpiEjecutado" class="value mono">$0</div><div class="mini">Suma ejecutada</div></div>
-      <div class="card kpi"><div class="label">% ejecución promedio</div><div id="kpiPct" class="value">0%</div><div class="mini">Promedio simple</div></div>
+      <div class="card kpi"><div class="label">% ejecución promedio</div><div id="kpiPct" class="value">0%</div><div class="mini" id="kpiPctMini">Ejecución media</div></div>
     </section>
 
     <section class="grid">
@@ -863,23 +858,36 @@
 
   function renderKPIs(rows){
     el("kpiTotal").textContent = rows.length;
+
     const total = rows.reduce((a,r)=>a + (Number(r.valor_total)||0), 0);
     const ej = rows.reduce((a,r)=>a + (Number(r.valor_ejecutado)||0), 0);
-    const pctAvg = rows.length ? rows.reduce((a,r)=>a + (Number(r.pct_ejecucion)||0), 0) / rows.length : 0;
+
+    const pctGlobal = total > 0 ? ej / total : 0;
+    const pctPromedio = rows.length
+      ? rows.reduce((a,r)=>a + (Number(r.pct_ejecucion)||0), 0) / rows.length
+      : 0;
 
     el("kpiValorTotal").textContent = COP.format(total);
     el("kpiEjecutado").textContent = COP.format(ej);
-    const pctTxt = (pctAvg * 100).toFixed(1) + "%";
+
+    const pctGlobalTxt = (pctGlobal * 100).toFixed(1) + "%";
+    const pctPromedioTxt = (pctPromedio * 100).toFixed(1) + "%";
+
     el("kpiPct").innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
-        <div style="font-weight:800">${pctTxt}</div>
+        <div style="font-weight:800">${pctGlobalTxt}</div>
         <div class="progress" style="width:120px;">
           <div class="progressTrack">
-            <div class="progressFill" style="width:${pctTxt}"></div>
+            <div class="progressFill" style="width:${pctGlobalTxt}"></div>
           </div>
         </div>
       </div>
     `;
+
+    const mini = el("kpiPctMini");
+    if (mini) {
+      mini.innerHTML = `Ejecución media. Promedio de los promedios: <strong>${pctPromedioTxt}</strong>`;
+    }
   }
 
   function renderTable(rows){
@@ -990,8 +998,8 @@
     const renderMenu = () => {
       menu.innerHTML = "";
       const makeItem = (opt) => {
-        const item = document.createElement("label");
         const isSelected = opt.selected;
+        const item = document.createElement("label");
         item.className = "msItem" + (isSelected ? " selected" : "");
         item.innerHTML = `<input type="checkbox" ${isSelected ? "checked" : ""}> <span>${opt.textContent}</span>`;
         item.addEventListener("click", (e)=>{
