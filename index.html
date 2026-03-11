@@ -229,9 +229,24 @@
     @media (max-width: 900px){ .modalBody{grid-template-columns:1fr;} }
     .detailCard{border:1px solid var(--stroke); border-radius:16px; padding:14px; background:#fff;}
     .detailCard h4{margin:0 0 10px; font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.3px}
-    .kv{display:grid; grid-template-columns: 180px 1fr; gap:8px 12px; align-items:start;}
-    .kv .k{font-size:12px; color:var(--muted); font-weight:700;}
-    .kv .v{font-size:13px; color:var(--text);}
+    .kv{
+      display:grid;
+      grid-template-columns: 180px 1fr;
+      gap:20px 18px;
+      align-items:start;
+    }
+    .kv .k{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+      padding-top:2px;
+    }
+    .kv .v{
+      font-size:13px;
+      color:var(--text);
+      line-height:1.5;
+      padding-bottom:4px;
+    }
     .timeline{display:grid; gap:12px;}
     .tlItem{display:grid; grid-template-columns: 110px 1fr; gap:10px; align-items:start;}
     .tlDate{font-size:12px; color:var(--muted); font-weight:700;}
@@ -886,7 +901,7 @@
 
     const mini = el("kpiPctMini");
     if (mini) {
-      mini.innerHTML = `Ejecución media (Promedio de los promedios): <strong>${pctPromedioTxt}</strong>`;
+      mini.innerHTML = `Ejecución media. Promedio de los promedios: <strong>${pctPromedioTxt}</strong>`;
     }
   }
 
