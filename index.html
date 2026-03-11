@@ -364,6 +364,8 @@
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/%/g, "")
+      .replace(/#/g, " numero ")
+      .replace(/n[º°]/gi, " numero ")
       .trim()
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "_")
@@ -399,29 +401,52 @@
       row.porcentaje;
 
     if (pct === undefined || pct === null || String(pct).trim() === "") {
-      const total = toNumber(row.valor_total || row.valor || row.valor_contrato || row.valor_total_contrato);
-      const ejecutado = toNumber(row.valor_ejecutado || row.ejecutado || row.valor_ejecutado_acumulado || row.ejecucion_financiera);
+      const total = toNumber(
+        row.valor_total ||
+        row.valor ||
+        row.valor_contrato ||
+        row.valor_total_contrato
+      );
+
+      const ejecutado = toNumber(
+        row.valor_ejecutado ||
+        row.ejecutado ||
+        row.valor_ejecutado_acumulado ||
+        row.ejecucion_financiera
+      );
+
       return total > 0 ? ejecutado / total : 0;
     }
 
     const raw = String(pct).trim();
 
-    if (raw.includes(".")) {
-      const direct = Number(raw);
-      if (Number.isFinite(direct)) {
-        return direct > 1 ? direct / 100 : direct;
-      }
+    const direct = Number(raw.replace(",", "."));
+    if (Number.isFinite(direct)) {
+      return direct > 1 ? direct / 100 : direct;
     }
 
     const normalized = raw
       .replace("%", "")
       .replace(/\./g, "")
       .replace(/,/g, ".");
+
     const n = Number(normalized);
 
     if (!Number.isFinite(n)) {
-      const total = toNumber(row.valor_total || row.valor || row.valor_contrato || row.valor_total_contrato);
-      const ejecutado = toNumber(row.valor_ejecutado || row.ejecutado || row.valor_ejecutado_acumulado || row.ejecucion_financiera);
+      const total = toNumber(
+        row.valor_total ||
+        row.valor ||
+        row.valor_contrato ||
+        row.valor_total_contrato
+      );
+
+      const ejecutado = toNumber(
+        row.valor_ejecutado ||
+        row.ejecutado ||
+        row.valor_ejecutado_acumulado ||
+        row.ejecucion_financiera
+      );
+
       return total > 0 ? ejecutado / total : 0;
     }
 
@@ -430,22 +455,115 @@
 
   function mapRow(row) {
     return {
-      equipo: row.equipo || "—",
-      tipo: row.tipo || "—",
-      financiacion: row.financiacion || row.financiacion_fuente || "—",
-      contrato: row.contrato || row.numero_contrato || row.nro_contrato || "—",
-      ano: toYear(row.ano || row.anio || row.vigencia),
-      contratista: row.contratista || row.nombre_contratista || "—",
-      objeto: row.objeto || row.descripcion || "—",
-      valor_total: toNumber(row.valor_total || row.valor || row.valor_contrato || row.valor_total_contrato),
-      valor_ejecutado: toNumber(row.valor_ejecutado || row.ejecutado || row.valor_ejecutado_acumulado || row.ejecucion_financiera),
-      valor_por_ejecutar: toNumber(row.valor_por_ejecutar || row.por_ejecutar),
-      pct_ejecucion: getPctValue(row),
-      estado: row.estado || "—",
-      fecha_inicio: row.fecha_inicio || row.inicio || "",
-      fecha_fin: row.fecha_fin || row.fin || "",
-      lat: Number(String(row.lat || row.latitude || row.latitud || "").replace(",", ".")),
-      lon: Number(String(row.lon || row.lng || row.longitud || row.longitude || "").replace(",", "."))
+      equipo:
+        row.equipo ||
+        row.tipo_equipo ||
+        "—",
+
+      tipo:
+        row.tipo ||
+        row.clase ||
+        "—",
+
+      financiacion:
+        row.financiacion ||
+        row.fuente_de_financiacion ||
+        row.financiacion_fuente ||
+        "—",
+
+      contrato:
+        row.contrato ||
+        row.contrato_no ||
+        row.contrato_numero ||
+        row.numero_contrato ||
+        row.nro_contrato ||
+        "—",
+
+      ano:
+        toYear(
+          row.ano ||
+          row.anio ||
+          row.ano_del_contrato ||
+          row.vigencia
+        ),
+
+      contratista:
+        row.contratista ||
+        row.nombre_contratista ||
+        "—",
+
+      objeto:
+        row.objeto ||
+        row.descripcion ||
+        "—",
+
+      valor_total:
+        toNumber(
+          row.valor_total ||
+          row.valor ||
+          row.valor_contrato ||
+          row.valor_total_contrato
+        ),
+
+      valor_ejecutado:
+        toNumber(
+          row.valor_ejecutado ||
+          row.ejecutado ||
+          row.valor_ejecutado_acumulado ||
+          row.ejecucion_financiera
+        ),
+
+      valor_por_ejecutar:
+        toNumber(
+          row.valor_por_ejecutar ||
+          row.por_ejecutar
+        ),
+
+      pct_ejecucion:
+        getPctValue(row),
+
+      estado:
+        row.estado ||
+        "—",
+
+      fecha_inicio:
+        row.fecha_inicio ||
+        row.fecha_inicio_contrato ||
+        row.inicio ||
+        "",
+
+      fecha_fin:
+        row.fecha_fin ||
+        row.fecha_de_terminacion ||
+        row.fecha_terminacion ||
+        row.fin ||
+        "",
+
+      plazo:
+        row.plazo || "",
+
+      prorroga:
+        row.prorroga ||
+        row.prorrogas ||
+        row.prorroga_suspensiones ||
+        "",
+
+      lat:
+        Number(String(
+          row.lat ||
+          row.latitude ||
+          row.latitud ||
+          ""
+        ).replace(",", ".")),
+
+      lon:
+        Number(String(
+          row.lon ||
+          row.lng ||
+          row.longitud ||
+          row.longitude ||
+          ""
+        ).replace(",", "."))
     };
   }
 
@@ -462,7 +580,7 @@
       const raw = {};
       headers.forEach((h, idx) => raw[h] = cols[idx] ?? "");
       return mapRow(raw);
-    }).filter(r => String(r.contrato).trim() !== "");
+    }).filter(r => String(r.contrato).trim() !== "" && String(r.contrato).trim() !== "—");
   }
 
   let mapaGeneral;
@@ -870,13 +988,18 @@
           <div class="k">% ejecución</div>
           <div class="v">
             <div class="progressText mono">${pctTxt}</div>
-            <div class="progress"><div class="progressTrack"><div class="progressFill" style="width:${pctTxt}"></div></div></div>
+            <div class="progress">
+              <div class="progressTrack">
+                <div class="progressFill" style="width:${pctTxt}"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
       <div class="detailCard">
         <h4>Resumen</h4>
         <div class="timeline">
+          <div class="tlItem"><div class="tlDate">Contrato</div><div class="tlBox mono">${r.contrato}</div></div>
           <div class="tlItem"><div class="tlDate">Inicio</div><div class="tlBox">${fmtDate(r.fecha_inicio)}</div></div>
           <div class="tlItem"><div class="tlDate">Fin</div><div class="tlBox">${fmtDate(r.fecha_fin)}</div></div>
           <div class="tlItem"><div class="tlDate">Estado</div><div class="tlBox">${r.estado || "—"}</div></div>
