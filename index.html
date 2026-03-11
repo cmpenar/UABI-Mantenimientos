@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Tablero de Control — Obras / Contratos</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     :root{
       --brand-blue:#2BA7B5; /* azul tipo el de la imagen */
@@ -24,10 +26,9 @@
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color:var(--text);
       background:
-        radial-gradient(900px 600px at 20% 10%, rgba(96,165,250,0.22), transparent 55%),
-        radial-gradient(900px 600px at 80% 5%, rgba(167,139,250,0.20), transparent 55%),
+        radial-gradient(1400px 900px at 10% 0%, rgba(43,167,181,0.10), transparent 50%),
         radial-gradient(900px 600px at 60% 90%, rgba(52,211,153,0.12), transparent 55%),
-        linear-gradient(180deg,var(--bg2),var(--bg1));
+        linear-gradient(180deg,var(--bg),#F3EFE5);
       min-height:100vh;
     }
     header{
@@ -50,7 +51,7 @@
       letter-spacing:0.5px;
     }
     h1{margin:0; font-size:16px; letter-spacing:0.2px}
-    .sub{margin-top:3px; font-size:12px; color:var(--muted)}
+    .sub{margin-top:3px; font-size:12px; color:rgba(255,255,255,0.85)}
     .filters{
       display:grid;
       grid-template-columns: 1.2fr 0.7fr 0.9fr 2.2fr;
@@ -72,9 +73,10 @@
       border:1px solid var(--stroke);
       background: var(--surface);
       border-radius:14px;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.08);
     }
-    select, input{width:100%;
+    select, input{
+      width:100%;
       appearance:none;
       background:transparent;
       border:none;
@@ -84,617 +86,432 @@
     }
     input::placeholder{color: rgba(107,114,128,0.65); font-weight:400;}
     .select .hint{
-  font-size:12px;
-  color: var(--text);
-  font-weight:700;
-  white-space:nowrap;
-}
+      font-size:12px;
+      color: var(--text);
+      font-weight:700;
+      white-space:nowrap;
+    }
     main .wrap{padding-top:18px; padding-bottom:28px;}
     .kpis{display:grid; grid-template-columns: repeat(12, 1fr); gap:14px;}
     .card{background: var(--surface); border:1px solid var(--stroke); border-radius:18px; box-shadow: var(--shadow);}
-    .kpi{grid-column: span 3; padding:14px; position:relative; overflow:hidden;}
-    .kpi .kpiLabel{font-size:12px; color:var(--muted)}
-    .kpi .kpiValue{font-size:20px; font-weight:800; margin-top:6px}
-    .kpi .kpiFoot{font-size:11px; color:var(--muted); margin-top:4px}
-    .grid{display:grid; grid-template-columns: repeat(12, 1fr); gap:14px; margin-top:14px;}
-    .span-6{grid-column: span 6;}
-    .span-12{grid-column: span 12;}
-    @media (max-width: 980px){ .kpi{grid-column: span 12;} .span-6{grid-column: span 12;} }
-    .cardHeader{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 14px 0 14px;}
-    .cardTitle{font-size:13px; margin:0; color:var(--text);}
-    .badge{font-size:11px; color:var(--muted); padding:6px 10px; border-radius:999px; border:1px solid var(--stroke); background: rgba(255,255,255,0.04);}
-    .chartBox{padding:10px 14px 14px 14px; height:320px;}
-    canvas{max-width:100%}
-    .tableWrap{padding:8px 14px 14px 14px; overflow:auto}
-    table{width:100%; border-collapse:separate; border-spacing:0}
-    thead th{
-      text-align:left; font-size:12px; color:var(--muted);
-      padding:10px 10px; border-bottom:1px solid rgba(255,255,255,0.10);
-      position:sticky; top:0; background: rgba(245,158,11,0.25); backdrop-filter: blur(10px);
-    }
-    tbody td{padding:10px 10px; border-bottom:1px solid rgba(255,255,255,0.08); font-size:13px; white-space:nowrap;}
-    /* Permite ver completo el nombre del contratista en el listado */
-    .wrapCell{white-space:normal; max-width:420px; min-width:260px; word-break:break-word; hyphens:auto; line-height:1.25;}
-    tbody tr:hover{background: rgba(255,255,255,0.04)}
+    .kpi{grid-column: span 3; padding:16px;}
+    .kpi .label{font-size:12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.35px}
+    .kpi .value{margin-top:8px; font-size:28px; font-weight:800; letter-spacing:-0.3px}
+    .kpi .mini{margin-top:8px; font-size:12px; color:var(--muted)}
+    @media (max-width: 960px){ .kpi{grid-column: span 6;} }
+    @media (max-width: 640px){ .kpi{grid-column: span 12;} }
+
+    .grid{display:grid; grid-template-columns: 1.15fr 0.85fr; gap:14px; margin-top:14px;}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr;} }
+    .panel{padding:14px; min-height: 340px;}
+    .panel h3{margin:0 0 10px; font-size:14px}
+    .panel .meta{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; color:var(--muted); font-size:12px}
+    .tableWrap{margin-top:14px; overflow:auto;}
+    table{width:100%; border-collapse:collapse; min-width:1000px;}
+    th, td{padding:10px 12px; border-bottom:1px solid rgba(17,24,39,0.06); vertical-align:middle;}
+    th{font-size:12px; color:var(--muted); text-align:left; position:sticky; top:0; background:var(--surface); z-index:1}
+    td{font-size:13px;}
+    tr:hover td{background: rgba(43,167,181,0.03);}
     .right{text-align:right}
-    .mono{font-variant-numeric: tabular-nums}
-    .chip{display:inline-flex; align-items:center; padding:6px 10px; border-radius:999px; font-size:12px;
-      border:1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.03);}
-    /* Barra de progreso para % de ejecución */
-    .progress{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:120px;max-width:140px;}
-    .progressTrack{width:100%;height:9px;border-radius:999px;background:#E5E7EB;border:1px solid #D1D5DB;overflow:hidden;}
-    .progressFill{height:100%;width:0%;border-radius:999px;background:#2BA7B5;display:block;}
-    .progressText{font-size:11px;color:#4B5563;text-align:center;}
-
-    .modalProg{max-width:320px !important; width:100%; align-items:stretch;}
-    .modalProg .progressTrack{width:100%;}
-
-
+    .mono{font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1;}
+    .chip{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--stroke); border-radius:999px; padding:4px 8px; font-size:12px; background:#fff}
+    .legendDot{width:9px; height:9px; border-radius:999px; display:inline-block}
+    .muted{color:var(--muted)}
+    .footer{max-width:1200px; margin: 0 auto 18px; padding:0 18px; color:#6B7280; font-size:12px; display:flex; align-items:center; gap:10px; justify-content:center; flex-direction:column;}
+    .footer img{width:180px; opacity:0.95}
+    .toolbar{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
     .btn{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:8px 10px; border-radius:12px;
-      border:1px solid rgba(17,24,39,0.14);
-      background: rgba(255,255,255,0.78);
-      color: var(--text);
-      cursor:pointer;
-      text-decoration:none;
-      font-size:12px;
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      border:none; padding:10px 14px; border-radius:12px; cursor:pointer;
+      background: linear-gradient(135deg, var(--brand-purple), #8A49B6);
+      color:white; font-weight:700; box-shadow: 0 10px 18px rgba(107,44,144,0.20);
     }
-    .btn:hover{background: rgba(255,255,255,0.92); border-color: rgba(17,24,39,0.22);}
-  
-  .footer{
-    margin-top:30px;
-    padding:24px 18px 28px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:10px;
-    color:var(--muted);
-  }
-  .footer img{
-    max-width:180px;
-    height:auto;
-    opacity:0.95;
-  }
-  .footer .caption{
-    font-size:13px;
-    color:#6B7280;
-    font-weight:600;
-  }
+    .btn.secondary{background:#fff; color:var(--text); border:1px solid var(--stroke); box-shadow:none;}
+    .progress{min-width:110px;}
+    .progressTrack{height:8px; background:#EEF2F7; border-radius:999px; overflow:hidden;}
+    .progressFill{height:8px; background: linear-gradient(90deg, var(--brand-blue), #47C9D7); border-radius:999px;}
+    .progressText{font-size:12px; color:var(--muted); margin-bottom:4px;}
+    #mapaGeneral{height: 340px; border-radius:14px; overflow:hidden; border:1px solid var(--stroke);}
+    .wrapCell{max-width: 320px; white-space: normal; line-height:1.25}
 
-    /* Multi-select desplegable (checkboxes) */
     .ms{position:relative; width:100%;}
-    .msSelectWrap select{display:none;} /* mantenemos el select oculto para lógica */
     .msBtn{
-      width:100%;
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px;
-      background:transparent; border:none; padding:0; margin:0;
-      color:var(--text); font-size:13px; cursor:pointer;
+      width:100%; text-align:left; border:none; background:transparent; color:var(--text);
+      font-size:13px; cursor:pointer; padding:0;
     }
-    .msValue{
-  color: var(--muted);
-  font-weight:400;
-}
-    .msCaret{opacity:0.75; font-size:12px;}
+    .msBtn .ph{color:#6B7280}
     .msMenu{
-      position:absolute; left:0; right:0;
-      top: calc(100% + 8px);
-      background: rgba(255,255,255,0.98);
-      border:1px solid rgba(17,24,39,0.14);
-      border-radius:14px;
-      box-shadow: 0 18px 40px rgba(17,24,39,0.12);
-      padding:8px;
-      display:none;
-      z-index:50;
-      max-height: 260px;
-      overflow:auto;
+      position:absolute; top:calc(100% + 8px); left:0; right:0; z-index:30;
+      background:#fff; border:1px solid var(--stroke); border-radius:14px;
+      box-shadow: var(--shadow); max-height:280px; overflow:auto; display:none;
     }
     .ms.open .msMenu{display:block;}
-    .msItem{
-      display:flex; align-items:center; gap:10px;
-      padding:8px 10px;
-      border-radius:12px;
-      cursor:pointer;
-      user-select:none;
-    }
-    .msItem:hover{background: rgba(43,167,181,0.10);}
-    .msItem input{width:16px; height:16px;}
-    .msItem .lbl{font-size:13px; color: var(--text);}
-    .msHint{font-size:11px; color: rgba(17,24,39,0.55); padding:6px 10px 0 10px;}
-    
-    /* Indicador visual de selección en menús */
-    .msItem{position:relative;}
-    .msItem.selected{background: rgba(43,167,181,0.12);}
-    .msItem.selected:hover{background: rgba(43,167,181,0.16);}
-    .msItem .mark{
-      width:18px; height:18px;
-      border-radius:999px;
-      border:2px solid rgba(43,167,181,0.55);
-      display:inline-grid; place-items:center;
-      flex:0 0 auto;
-      background: transparent;
-    }
-    .msItem.selected .mark{
-      background: rgba(43,167,181,0.95);
-      border-color: rgba(43,167,181,0.95);
-    }
-    .msItem.selected .mark::after{
-      content:"✓";
-      color:white;
-      font-size:12px;
-      font-weight:900;
-      line-height:1;
-      transform: translateY(-0.5px);
-    }
-    .msItem input{display:none;} /* ocultamos checkbox nativo; usamos mark */
-    
-    /* Modal */
-    .modalOverlay{
-      position:fixed; inset:0;
-      background: rgba(17,24,39,0.55);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      z-index:9999;
-    }
-    .modalOverlay.open{display:flex;}
-    .modalCard{
-      width:min(920px, 100%);
-      max-height: min(82vh, 760px);
-      overflow:hidden;
-      background: rgba(255,255,255,0.98);
-      border:1px solid rgba(17,24,39,0.14);
-      border-radius:18px;
-      box-shadow: 0 28px 70px rgba(17,24,39,0.25);
-      display:flex;
-      flex-direction:column;
-    }
-    .modalHeader{
-      display:flex; align-items:flex-start; justify-content:space-between;
-      gap:12px;
-      padding:14px 16px;
-      border-bottom:1px solid rgba(17,24,39,0.10);
-      background: rgba(255,255,255,0.92);
-    }
-    .modalTitle{font-weight:900; font-size:16px; color:#111827;}
-    .modalSub{margin-top:2px; font-size:12px; color: rgba(17,24,39,0.60);}
-    .modalClose{
-      border:1px solid rgba(17,24,39,0.18);
-      background: rgba(255,255,255,0.85);
-      border-radius:12px;
-      padding:8px 10px;
-      cursor:pointer;
-      font-weight:900;
-      line-height:1;
-    }
-    .modalClose:hover{background: rgba(255,255,255,0.98);}
-    .modalBody{
-      padding:14px 16px 16px;
-      overflow:auto;
-    }
-    .detailGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px 14px;
-    }
-    @media (max-width: 720px){
-      .detailGrid{grid-template-columns:1fr;}
-    }
-    .detailItem{
-      border:1px solid rgba(17,24,39,0.10);
-      border-radius:14px;
-      padding:10px 12px;
-      background: rgba(249,250,251,0.95);
-    }
-    .detailLbl{font-size:11px; color: rgba(17,24,39,0.60); font-weight:800; letter-spacing:0.2px;}
-    .detailVal{margin-top:6px; font-size:13px; color:#111827; white-space:pre-wrap; word-break:break-word;}
-    .detailItem.full{grid-column: 1 / -1;}
+    .msItem{display:flex; align-items:center; gap:10px; padding:10px 12px; cursor:pointer;}
+    .msItem:hover{background:rgba(43,167,181,0.05)}
+    .msItem input{width:auto;}
 
+    .modalOverlay{
+      position:fixed; inset:0; background:rgba(15,23,42,0.45);
+      display:none; align-items:center; justify-content:center; padding:18px; z-index:1000;
+    }
+    .modalOverlay.show{display:flex;}
+    .modalCard{
+      width:min(980px, 100%); max-height:90vh; overflow:auto;
+      background:#fff; border:1px solid var(--stroke); border-radius:18px; box-shadow:var(--shadow);
+    }
+    .modalHeader{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px 18px; border-bottom:1px solid rgba(17,24,39,0.08); position:sticky; top:0; background:#fff; z-index:2;}
+    .modalTitle{font-size:18px; font-weight:800;}
+    .modalSub{font-size:12px; color:var(--muted); margin-top:4px;}
+    .modalClose{border:none; background:#F3F4F6; width:36px; height:36px; border-radius:10px; cursor:pointer; font-size:18px;}
+    .modalBody{padding:18px; display:grid; grid-template-columns: 1.2fr 0.8fr; gap:16px;}
+    @media (max-width: 900px){ .modalBody{grid-template-columns:1fr;} }
+    .detailCard{border:1px solid var(--stroke); border-radius:16px; padding:14px; background:#fff;}
+    .detailCard h4{margin:0 0 10px; font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.3px}
+    .kv{display:grid; grid-template-columns: 180px 1fr; gap:8px 12px; align-items:start;}
+    .kv .k{font-size:12px; color:var(--muted); font-weight:700;}
+    .kv .v{font-size:13px; color:var(--text);}
+    .timeline{display:grid; gap:12px;}
+    .tlItem{display:grid; grid-template-columns: 110px 1fr; gap:10px; align-items:start;}
+    .tlDate{font-size:12px; color:var(--muted); font-weight:700;}
+    .tlBox{border:1px solid var(--stroke); border-radius:14px; padding:12px; background:#fff;}
   </style>
 </head>
 <body>
+
 <header>
   <div class="wrap">
-    
     <div class="top">
-      <div class="brand" style="justify-content:center; width:100%; text-align:center;">
-        
+      <div class="brand">
+        <div class="logo">MDE</div>
         <div>
-          <div style="text-align:center; width:100%;">
-          <h1 style="margin:0; font-size:26px; font-weight:900; letter-spacing:0.5px;">
-            Seguimiento Obras / Contratos
-          </h1>
-          <div style="font-size:18px; font-weight:900; opacity:0.95;">
-            Unidad de Mantenimiento
-          </div>
-        </div>
+          <h1>Tablero de Control — Obras / Contratos</h1>
+          <div class="sub">Visualización desde Google Sheets</div>
         </div>
       </div>
-
-      <div class="filters">
-        <div class="select" data-span="sm">
-          <span class="hint">Equipo</span>
-          <div class="ms" data-for="filterEquipo">
-            <button class="msBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-              <span class="msValue">Todos</span>
-              <span class="msCaret">▾</span>
-            </button>
-            <div class="msMenu" role="listbox" aria-multiselectable="true"></div>
-          </div>
-          <div class="msSelectWrap"><select id="filterEquipo" multiple><option value="Todos">Todos</option></select></div>
-        </div>
-
-        <div class="select" data-span="xs">
-          <span class="hint">Año</span>
-          <div class="ms" data-for="filterAno">
-            <button class="msBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-              <span class="msValue">Todos</span>
-              <span class="msCaret">▾</span>
-            </button>
-            <div class="msMenu" role="listbox" aria-multiselectable="true"></div>
-          </div>
-          <div class="msSelectWrap"><select id="filterAno" multiple><option value="Todos">Todos</option></select></div>
-        </div>
-
-        <div class="select" data-span="sm">
-          <span class="hint">Estado</span>
-          <div class="ms" data-for="filterEstado">
-            <button class="msBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-              <span class="msValue">Todos</span>
-              <span class="msCaret">▾</span>
-            </button>
-            <div class="msMenu" role="listbox" aria-multiselectable="true"></div>
-          </div>
-          <div class="msSelectWrap"><select id="filterEstado" multiple><option value="Todos">Todos</option></select></div>
-        </div>
-
-        <div class="select search" data-span="lg">
-          <span class="hint">Buscar</span>
-          <input id="searchBox" placeholder="Contrato, contratista, objeto..." />
-        </div>
-
-        <div style="display:flex; gap:10px; width:100%; align-items:stretch;" data-span="full">
-          <div class="select" style="flex:1;">
-            <span class="hint">Contratista</span>
-            <div class="ms" data-for="filterContratista">
-              <button class="msBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-                <span class="msValue">Todos</span>
-                <span class="msCaret">▾</span>
-              </button>
-              <div class="msMenu" role="listbox" aria-multiselectable="true"></div>
-            </div>
-            <div class="msSelectWrap"><select id="filterContratista" multiple><option value="Todos">Todos</option></select></div>
-          </div>
-
-          <div class="select" style="flex:1;">
-            <span class="hint">Tipo de financiación</span>
-            <div class="ms" data-for="filterFinanciacion">
-              <button class="msBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-                <span class="msValue">Todos</span>
-                <span class="msCaret">▾</span>
-              </button>
-              <div class="msMenu" role="listbox" aria-multiselectable="true"></div>
-            </div>
-            <div class="msSelectWrap"><select id="filterFinanciacion" multiple><option value="Todos">Todos</option></select></div>
-          </div>
-
-          <div style="display:flex; align-items:center;">
-            <button class="btn" type="button" onclick="resetearTodo()">🔄 Reestablecer todo</button>
-          </div>
-        </div>
+      <div class="toolbar">
+        <button class="btn secondary" onclick="location.reload()">Actualizar</button>
+        <button class="btn" onclick="resetearTodo()">Restablecer filtros</button>
       </div>
+    </div>
 
-</div>
-</div>
-  </div>
-
-  <div id="dataStatus" style="display:none; max-width:1200px; margin:10px auto 0; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.25); color:#fff; font-weight:700;">
-    Cargando datos…
+    <div class="filters">
+      <div class="select">
+        <span class="hint">Equipo</span>
+        <select id="filterEquipo" multiple hidden></select>
+        <div class="ms" data-for="filterEquipo"><button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button><div class="msMenu"></div></div>
+      </div>
+      <div class="select">
+        <span class="hint">Año</span>
+        <select id="filterAno" multiple hidden></select>
+        <div class="ms" data-for="filterAno"><button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button><div class="msMenu"></div></div>
+      </div>
+      <div class="select">
+        <span class="hint">Estado</span>
+        <select id="filterEstado" multiple hidden></select>
+        <div class="ms" data-for="filterEstado"><button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button><div class="msMenu"></div></div>
+      </div>
+      <div class="select">
+        <span class="hint">Contratista</span>
+        <select id="filterContratista" multiple hidden></select>
+        <div class="ms" data-for="filterContratista"><button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button><div class="msMenu"></div></div>
+      </div>
+      <div class="select" data-span="full">
+        <span class="hint">Financiación</span>
+        <select id="filterFinanciacion" multiple hidden></select>
+        <div class="ms" data-for="filterFinanciacion"><button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button><div class="msMenu"></div></div>
+      </div>
+      <div class="select search" data-span="full">
+        <span class="hint">Buscar</span>
+        <input id="searchBox" type="text" placeholder="Contrato, contratista, objeto, equipo..." />
+      </div>
+    </div>
   </div>
 </header>
 
 <main>
   <div class="wrap">
-    <div class="kpis">
-      <div class="card kpi">
-        <div class="kpiLabel">Obras / contratos</div>
-        <div class="kpiValue" id="kpiTotal">—</div>
-        <div class="kpiFoot">Filtrados</div>
-      </div>
-      <div class="card kpi">
-        <div class="kpiLabel">Valor total</div>
-        <div class="kpiValue mono" id="kpiValorTotal">—</div>
-        <div class="kpiFoot">Suma contratado</div>
-      </div>
-      <div class="card kpi">
-        <div class="kpiLabel">Valor ejecutado</div>
-        <div class="kpiValue mono" id="kpiEjecutado">—</div>
-        <div class="kpiFoot">Suma ejecutado</div>
-      </div>
-      <div class="card kpi">
-        <div class="kpiLabel">% ejecución (Ejecutado / Total)</div>
-        <div class="kpiValue" id="kpiPct">—</div>
-        <div class="kpiFoot">Promedio</div>
-</div>
-    </div>
+    <section class="kpis">
+      <div class="card kpi"><div class="label">Total contratos</div><div id="kpiTotal" class="value">0</div><div class="mini">Registros filtrados</div></div>
+      <div class="card kpi"><div class="label">Valor total</div><div id="kpiValorTotal" class="value mono">$0</div><div class="mini">Suma del valor contractual</div></div>
+      <div class="card kpi"><div class="label">Valor ejecutado</div><div id="kpiEjecutado" class="value mono">$0</div><div class="mini">Suma ejecutada</div></div>
+      <div class="card kpi"><div class="label">% ejecución promedio</div><div id="kpiPct" class="value">0%</div><div class="mini">Promedio simple</div></div>
+    </section>
 
-    <div class="grid">
-      <div class="card span-6">
-        <div class="cardHeader">
-          <h2 class="cardTitle">Distribución por estado</h2>
-          <span class="badge" id="badgeEstado">—</span>
-        </div>
-        <div class="chartBox"><canvas id="chartEstado"></canvas></div>
+    <section class="grid">
+      <div class="card panel">
+        <div class="meta"><h3>Contratos por estado</h3><span id="badgeEstado">0 estados</span></div>
+        <canvas id="chartEstado"></canvas>
       </div>
-
-      <div class="card span-6">
-        <div class="cardHeader">
-          <h2 class="cardTitle">Contratos por equipo</h2>
-          <span class="badge" id="badgeEquipo">—</span>
-        </div>
-        <div class="chartBox"><canvas id="chartEquipo"></canvas></div>
+      <div class="card panel">
+        <div class="meta"><h3>Contratos por equipo</h3><span id="badgeEquipo">0 equipos</span></div>
+        <canvas id="chartEquipo"></canvas>
       </div>
+    </section>
 
-      <div class="card span-12">
-        <div class="cardHeader">
-          <h2 class="cardTitle">Listado</h2>
-          <span class="badge" id="badgeTabla">—</span>
-        </div>
-        <div class="tableWrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Contrato</th>
-                <th>Equipo</th>
-                <th>Año</th>
-                <th>Contratista</th>
-                <th>Estado</th>
-                <th class="right">Valor total</th>
-                <th class="right">Ejecutado</th>
-                <th class="right" style="text-align:center">% Ejec.</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
-        </div>
-</div>
-    </div>
+    <section class="card panel" style="margin-top:14px;">
+      <div class="meta"><h3>Mapa general</h3><span id="badgeMapa">0 puntos</span></div>
+      <div id="mapaGeneral"></div>
+    </section>
+
+    <section class="card panel tableWrap">
+      <div class="meta"><h3>Tabla de contratos</h3><span id="badgeTabla">0 filas</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Contrato</th>
+            <th>Equipo</th>
+            <th>Año</th>
+            <th>Contratista</th>
+            <th>Estado</th>
+            <th class="right">Valor total</th>
+            <th class="right">Valor ejecutado</th>
+            <th class="right">% ejecución</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </section>
   </div>
 </main>
 
 <script>
-  // Datos cargados desde tu Excel (Hoja1)
-  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQzSS1nGUttKKpKvu4nZmrz7U6gLYMv1HE1FCAwJGTm5p5fsFldc33O0bhvyVSLCxN-zSPWvIarJP3x/pub?output=csv";
+  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSaSFkVYifCJXUDyIC0tgtAneR1VbJJF-9swvQYnCDLkEfdC8ovezSK5HZrISwu2nk_NgvdzaIDT-Mj/pub?gid=0&single=true&output=csv";
   let data = [];
 
-  async function fetchTextWithFallback(url){
-    // 1) intento directo
-    try{
-      const r1 = await fetch(url, { cache:"no-store" });
-      if (r1.ok) return await r1.text();
-      throw new Error("HTTP " + r1.status);
-    } catch(e1){
-      // 2) intento con corsproxy.io
-      try{
-        const prox1 = "https://corsproxy.io/?" + encodeURIComponent(url);
-        const r2 = await fetch(prox1, { cache:"no-store" });
-        if (r2.ok) return await r2.text();
-        throw new Error("Proxy1 HTTP " + r2.status);
-      } catch(e2){
-        // 3) intento con allorigins
-        const prox2 = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
-        const r3 = await fetch(prox2, { cache:"no-store" });
-        if (r3.ok) return await r3.text();
-        throw new Error("No se pudo cargar el CSV (CORS).");
+  function el(id){ return document.getElementById(id); }
+  const COP = new Intl.NumberFormat("es-CO", { style:"currency", currency:"COP", maximumFractionDigits:0 });
+
+  function parseCSV(text) {
+    const rows = [];
+    let row = [];
+    let value = "";
+    let i = 0;
+    let inQuotes = false;
+
+    while (i < text.length) {
+      const char = text[i];
+      const next = text[i + 1];
+
+      if (inQuotes) {
+        if (char === '"' && next === '"') {
+          value += '"';
+          i += 2;
+          continue;
+        }
+        if (char === '"') {
+          inQuotes = false;
+          i += 1;
+          continue;
+        }
+        value += char;
+        i += 1;
+        continue;
       }
+
+      if (char === '"') {
+        inQuotes = true;
+        i += 1;
+        continue;
+      }
+      if (char === ',') {
+        row.push(value);
+        value = "";
+        i += 1;
+        continue;
+      }
+      if (char === "\r") {
+        i += 1;
+        continue;
+      }
+      if (char === "\n") {
+        row.push(value);
+        rows.push(row);
+        row = [];
+        value = "";
+        i += 1;
+        continue;
+      }
+
+      value += char;
+      i += 1;
     }
+
+    if (value !== "" || row.length) {
+      row.push(value);
+      rows.push(row);
+    }
+
+    return rows.filter(r => r.some(cell => String(cell ?? "").trim() !== ""));
   }
 
-  function setStatus(msg, isError=false){
-    const box = document.getElementById("dataStatus");
-    if (!box) return;
-    box.style.display = "block";
-    box.textContent = msg;
-    box.style.background = isError ? "rgba(239,68,68,0.25)" : "rgba(255,255,255,0.18)";
-    box.style.borderColor = isError ? "rgba(239,68,68,0.45)" : "rgba(255,255,255,0.25)";
-  }
-
-  function hideStatus(){
-    const box = document.getElementById("dataStatus");
-    if (!box) return;
-    box.style.display = "none";
-  }
-
-
-
-  // ===== Carga de datos desde Google Sheets (CSV) =====
-  async function loadDataFromSheet(){
-    const res = await fetch(SHEET_CSV_URL, { cache: "no-store" });
-    if (!res.ok) throw new Error("No se pudo cargar el CSV");
-    const csvText = await res.text();
-    const rows = parseCSV(csvText);
-    if (!rows.length) return;
-
-    const headers = rows.shift().map(h => String(h ?? "").trim());
-
-    const norm = (s) => String(s ?? "")
+  function normalizeKey(str) {
+    return String(str || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
       .trim()
       .toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")   // quita tildes
-      .replace(/\s+/g," ");
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }
 
-    const headerNorm = headers.map(norm);
+  function toNumber(value) {
+    if (value == null) return 0;
+    const raw = String(value).trim();
+    if (!raw) return 0;
+    const cleaned = raw.replace(/\$/g, "").replace(/\s/g, "").replace(/\./g, "").replace(/,/g, ".");
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : 0;
+  }
 
-    const colAny = (...names) => {
-      const wants = names.flat().map(norm);
-      for (const w of wants){
-        const i = headerNorm.findIndex(h => h === w);
-        if (i >= 0) return i;
-      }
-      // intento "contiene" por si hay variaciones
-      for (const w of wants){
-        const i = headerNorm.findIndex(h => h.includes(w));
-        if (i >= 0) return i;
-      }
-      return -1;
+  function toYear(value) {
+    const n = Number(String(value || "").trim());
+    return Number.isFinite(n) ? n : (value || "");
+  }
+
+  function mapRow(row) {
+    return {
+      equipo: row.equipo || "—",
+      tipo: row.tipo || "—",
+      financiacion: row.financiacion || row.financiacion_fuente || "—",
+      contrato: row.contrato || row.numero_contrato || row.nro_contrato || "—",
+      ano: toYear(row.ano || row.anio || row.vigencia),
+      contratista: row.contratista || row.nombre_contratista || "—",
+      objeto: row.objeto || row.descripcion || "—",
+      valor_total: toNumber(row.valor_total || row.valor || row.valor_contrato),
+      valor_ejecutado: toNumber(row.valor_ejecutado || row.ejecutado),
+      valor_por_ejecutar: toNumber(row.valor_por_ejecutar || row.por_ejecutar),
+      pct_ejecucion: (() => {
+        const pct = row.pct_ejecucion || row.porcentaje_ejecucion || row._ejecucion || row.ejecucion_pct;
+        const n = Number(String(pct || "").replace("%", "").replace(",", "."));
+        if (!Number.isFinite(n)) return 0;
+        return n > 1 ? n / 100 : n;
+      })(),
+      estado: row.estado || "—",
+      fecha_inicio: row.fecha_inicio || row.inicio || "",
+      fecha_fin: row.fecha_fin || row.fin || "",
+      lat: Number(String(row.lat || row.latitude || row.latitud || "").replace(",", ".")),
+      lon: Number(String(row.lon || row.lng || row.longitud || row.longitude || "").replace(",", "."))
     };
+  }
 
-    const idx = {
-      equipo: colAny("EQUIPO","Equipo"),
-      tipo: colAny("TIPO","Tipo"),
-      financiacion: colAny("TIPO DE FINANCIACION","TIPO DE FINANCIACIÓN","Tipo de financiación","Tipo de financiacion"),
-      contrato: colAny("Contrato No","Contrato","No contrato","Nro contrato"),
-      ano: colAny("Año del contrato","Ano del contrato","Año","Ano"),
-      contratista: colAny("Contratista","Proveedor"),
-      objeto: colAny("Objeto"),
-      valor_total: colAny("Valor total","Valor Total"),
-      valor_ejecutado: colAny("Valor Ejecutado","Valor ejecutado"),
-      por_ejecutar: colAny("Por ejecutar","Por Ejecutar","Saldo"),
-      pct: colAny("% de Ejecucion","% de Ejecución","% de ejecución","Porcentaje de ejecucion","Porcentaje de ejecución"),
-      estado: colAny("Estado"),
-      fecha_inicio: colAny("Fecha inicio contrato","Fecha inicio","Inicio"),
-      fecha_fin: colAny("Fecha de terminacion","Fecha de terminación","Fecha fin","Fin")
-    };
+  async function loadData() {
+    const res = await fetch(CSV_URL, { cache: "no-store" });
+    if (!res.ok) throw new Error(`No se pudo cargar el CSV (${res.status})`);
 
-    const num = (x) => {
-      const s = String(x ?? "").trim();
-      if (!s) return 0;
-      // Soporta números tipo 1.234.567 o 1,234,567 o 1234567
-      const cleaned = s.replace(/\s/g,"").replace(/\./g,"").replace(/,/g,".");
-      const v = Number(cleaned);
-      return Number.isFinite(v) ? v : 0;
-    };
+    const csvText = await res.text();
+    const rows = parseCSV(csvText);
+    if (!rows.length) throw new Error("El CSV llegó vacío");
 
-    data = rows.map(r => {
-      const get = (i) => (i >= 0 ? r[i] : "");
-      const valor_total = num(get(idx.valor_total));
-      const valor_ej = num(get(idx.valor_ejecutado));
-      const por_ej = num(get(idx.por_ejecutar)) || Math.max(valor_total - valor_ej, 0);
-      let pctRaw = (idx.pct >= 0) ? String(r[idx.pct] ?? "").trim() : "";
-      // Soporta "75%" o "0.75"
-      let pctNum = 0;
-      if (pctRaw){
-        pctRaw = pctRaw.replace(",", ".").replace("%","").trim();
-        const v = Number(pctRaw);
-        if (Number.isFinite(v)){
-          pctNum = (v > 1) ? (v/100) : v;
-        }
-      } else {
-        pctNum = valor_total ? (valor_ej / valor_total) : 0;
-      }
-      const pct = pctNum;
+    const headers = rows[0].map(normalizeKey);
+    data = rows.slice(1).map(cols => {
+      const raw = {};
+      headers.forEach((h, idx) => raw[h] = cols[idx] ?? "");
+      return mapRow(raw);
+    }).filter(r => String(r.contrato).trim() !== "");
+  }
 
-      return {
-        equipo: String(get(idx.equipo) ?? "").trim(),
-        tipo: String(get(idx.tipo) ?? "").trim(),
-        financiacion: String(get(idx.financiacion) ?? "").trim(),
-        contrato: String(get(idx.contrato) ?? "").trim(),
-        ano: Number(String(get(idx.ano) ?? "").trim()) || String(get(idx.ano) ?? "").trim(),
-        contratista: String(get(idx.contratista) ?? "").trim(),
-        objeto: String(get(idx.objeto) ?? "").trim(),
-        valor_total,
-        valor_ejecutado: valor_ej,
-        valor_por_ejecutar: por_ej,
-        pct_ejecucion: pct,
-        estado: String(get(idx.estado) ?? "").trim(),
-        fecha_inicio: String(get(idx.fecha_inicio) ?? "").trim(),
-        fecha_fin: String(get(idx.fecha_fin) ?? "").trim(),
-      };
+  let mapaGeneral;
+  let markersLayer;
+  let chartEstado, chartEquipo;
+  const DEFAULT_ANO = "2025";
+
+  function initMap(){
+    mapaGeneral = L.map("mapaGeneral", { scrollWheelZoom:true }).setView([6.2442, -75.5812], 11);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(mapaGeneral);
+    markersLayer = L.layerGroup().addTo(mapaGeneral);
+  }
+
+  function actualizarMapaGeneral(rows){
+    if (!mapaGeneral) initMap();
+    markersLayer.clearLayers();
+
+    const puntos = rows.filter(r => Number.isFinite(r.lat) && Number.isFinite(r.lon) && r.lat && r.lon);
+    puntos.forEach(r => {
+      const marker = L.circleMarker([r.lat, r.lon], {
+        radius: 7,
+        weight: 1,
+        color: "#ffffff",
+        fillColor: "#2BA7B5",
+        fillOpacity: 0.9
+      }).bindPopup(`
+        <strong>Contrato:</strong> ${r.contrato}<br>
+        <strong>Equipo:</strong> ${r.equipo}<br>
+        <strong>Contratista:</strong> ${r.contratista}<br>
+        <strong>Estado:</strong> ${r.estado}<br>
+        <strong>Valor total:</strong> ${COP.format(Number(r.valor_total || 0))}
+      `);
+      markersLayer.addLayer(marker);
     });
 
-    normalizeData();
-  }
+    el("badgeMapa").textContent = `${puntos.length} puntos`;
 
-  // Parser CSV (soporta comillas)
-  function parseCSV(text){
-    const rows = [];
-    let row = [], cur = "", inQuotes = false;
-    for (let i=0; i<text.length; i++){
-      const c = text[i], n = text[i+1];
-      if (c === '"'){
-        if (inQuotes && n === '"'){ cur += '"'; i++; }
-        else inQuotes = !inQuotes;
-      } else if (c === "," && !inQuotes){
-        row.push(cur); cur = "";
-      } else if ((c === "\n" || c === "\r") && !inQuotes){
-        if (c === "\r" && n === "\n") i++;
-        row.push(cur);
-        if (row.length > 1 || row[0] !== "") rows.push(row);
-        row = []; cur = "";
-      } else {
-        cur += c;
-      }
+    if (puntos.length) {
+      const bounds = L.latLngBounds(puntos.map(r => [r.lat, r.lon]));
+      mapaGeneral.fitBounds(bounds, { padding:[20,20] });
+    } else {
+      mapaGeneral.setView([6.2442, -75.5812], 11);
     }
-    row.push(cur);
-    if (row.length > 1 || row[0] !== "") rows.push(row);
-    return rows;
+
+    setTimeout(() => mapaGeneral.invalidateSize(), 50);
   }
 
-  // Normaliza textos para filtros/búsqueda y unifica "Obras Civiles" vs "Obras civiles"
-  function normalizeData(){
-    for (const d of data) {
-      d.contratista = String(d.contratista ?? '').replace(/\s+/g,' ').trim();
-      d.equipo = String(d.equipo ?? '').replace(/\s+/g,' ').trim();
-
-      const eq = d.equipo.toLowerCase();
-      if (eq === "obras civiles") d.equipo = "Obras Civiles";
-      else if (eq === "obras electromecánicas" || eq === "obras electromecanicas") d.equipo = "Obras Electromecánicas";
-      else if (eq === "bienes muebles") d.equipo = "Bienes Muebles";
-
-      d.estado = String(d.estado ?? '').replace(/\s+/g,' ').trim();
-      d.tipo = String(d.tipo ?? '').replace(/\s+/g,' ').trim();
-      d.financiacion = String(d.financiacion ?? '').replace(/\s+/g,' ').trim();
-    }
+  function unique(arr, keyFn){
+    return [...new Set(arr.map(keyFn).filter(v => v != null && String(v).trim() !== ""))];
   }
-
-
-  function unique(arr, keyFn){ return [...new Set(arr.map(keyFn).filter(v=>v!=null && String(v).trim()!==""))]; }
 
   function fillFilters(){
     const equipos = unique(data, d => d.equipo).sort((a,b)=>String(a).localeCompare(String(b)));
     const anos = unique(data, d => d.ano).sort((a,b)=>Number(a)-Number(b));
     const contratistas = unique(data, d => d.contratista).sort((a,b)=>String(a).localeCompare(String(b)));
-    const estados = unique(data, d => d.estado).sort((a,b)=>String(a).localeCompare(String(b)));
+    const estados = unique(data, d => d.estado || "—").sort((a,b)=>String(a).localeCompare(String(b)));
     const financiaciones = unique(data, d => d.financiacion).sort((a,b)=>String(a).localeCompare(String(b)));
 
-    const selEquipo = el("filterEquipo");
-    equipos.forEach(v=>{ const o=document.createElement("option"); o.value=v; o.textContent=v; selEquipo.appendChild(o); });
+    const fill = (selId, values) => {
+      const sel = el(selId);
+      sel.innerHTML = "";
+      const todos = document.createElement("option");
+      todos.value = "Todos";
+      todos.textContent = "Todos";
+      todos.selected = true;
+      sel.appendChild(todos);
+      values.forEach(v => {
+        const o = document.createElement("option");
+        o.value = String(v);
+        o.textContent = String(v);
+        sel.appendChild(o);
+      });
+    };
 
-    const selAno = el("filterAno");
-    anos.forEach(v=>{ const o=document.createElement("option"); o.value=String(v); o.textContent=String(v); selAno.appendChild(o); });
+    fill("filterEquipo", equipos);
+    fill("filterAno", anos);
+    fill("filterContratista", contratistas);
+    fill("filterEstado", estados);
+    fill("filterFinanciacion", financiaciones);
+  }
 
-    const selContratista = el("filterContratista");
-    contratistas.forEach(v=>{ const o=document.createElement("option"); o.value=v; o.textContent=v; selContratista.appendChild(o); });
+  function getSelectedVals(selId){
+    const sel = el(selId);
+    const vals = [...sel.selectedOptions].map(o => o.value);
+    return vals.length ? vals : ["Todos"];
+  }
 
-    const selEstado = el("filterEstado");
-    estados.forEach(v=>{ const o=document.createElement("option"); o.value=v; o.textContent=v; selEstado.appendChild(o); });
-
-    const selFin = el("filterFinanciacion");
-    financiaciones.forEach(v=>{ const o=document.createElement("option"); o.value=v; o.textContent=v; selFin.appendChild(o); });
+  function okMulti(selected, value){
+    return selected.includes("Todos") || selected.includes(String(value));
   }
 
   function applyFilters(){
     const q = (el("searchBox").value || "").trim().toLowerCase();
+    const feq = getSelectedVals("filterEquipo");
+    const fa  = getSelectedVals("filterAno");
+    const fs  = getSelectedVals("filterEstado");
+    const fc  = getSelectedVals("filterContratista");
+    const ff  = getSelectedVals("filterFinanciacion");
 
-    const getSelected = (selId) => {
-      const sel = el(selId);
-      const vals = [...sel.selectedOptions].map(o=>o.value);
-      if (!vals.length) return ["Todos"];
-      return vals;
-    };
-
-    const feq = getSelected("filterEquipo");
-    const fa  = getSelected("filterAno");
-    const fs  = getSelected("filterEstado");
-    const fc  = getSelected("filterContratista");
-    const ff  = getSelected("filterFinanciacion");
-
-    const okMulti = (selected, value) => selected.includes("Todos") || selected.includes(String(value));
-
-    return data.filter(d=>{
+    return data.filter(d => {
       const okEquipo = okMulti(feq, d.equipo);
       const okAno = okMulti(fa, d.ano);
       const okEstado = okMulti(fs, d.estado ?? "—");
@@ -703,9 +520,7 @@
 
       let okSearch = true;
       if (q){
-        const hay = [
-          d.contrato, d.contratista, d.objeto, d.equipo, d.tipo, d.financiacion, d.estado
-        ].join(" ").toLowerCase();
+        const hay = [d.contrato, d.contratista, d.objeto, d.equipo, d.tipo, d.financiacion, d.estado].join(" ").toLowerCase();
         okSearch = hay.includes(q);
       }
 
@@ -713,24 +528,10 @@
     });
   }
 
-  
-  // ===== Filtros dependientes (cascada) =====
   let updatingFilters = false;
 
-  function getSelectedVals(selId){
-    const sel = el(selId);
-    const vals = [...sel.selectedOptions].map(o=>o.value);
-    return vals.length ? vals : ["Todos"];
-  }
-
-  function okMulti(selected, value){
-    return selected.includes("Todos") || selected.includes(String(value));
-  }
-
-  // Filtra datos aplicando TODOS los filtros excepto el indicado
   function rowsForOptions(exceptId){
     const q = (el("searchBox").value || "").trim().toLowerCase();
-
     const feq = getSelectedVals("filterEquipo");
     const fa  = getSelectedVals("filterAno");
     const fs  = getSelectedVals("filterEstado");
@@ -738,172 +539,92 @@
     const ff  = getSelectedVals("filterFinanciacion");
 
     return data.filter(d=>{
-      const okEquipo = (exceptId==="filterEquipo") ? true : okMulti(feq, d.equipo);
-      const okAno    = (exceptId==="filterAno")    ? true : okMulti(fa, d.ano);
-      const okEstado = (exceptId==="filterEstado") ? true : okMulti(fs, d.estado ?? "—");
-      const okContr  = (exceptId==="filterContratista") ? true : okMulti(fc, d.contratista);
-      const okFin    = (exceptId==="filterFinanciacion") ? true : okMulti(ff, d.financiacion);
+      const okEquipo = (exceptId === "filterEquipo") ? true : okMulti(feq, d.equipo);
+      const okAno    = (exceptId === "filterAno") ? true : okMulti(fa, d.ano);
+      const okEstado = (exceptId === "filterEstado") ? true : okMulti(fs, d.estado ?? "—");
+      const okContr  = (exceptId === "filterContratista") ? true : okMulti(fc, d.contratista);
+      const okFin    = (exceptId === "filterFinanciacion") ? true : okMulti(ff, d.financiacion);
 
       let okSearch = true;
       if (q){
-        const hay = [d.contrato, d.contratista, d.objeto, d.equipo, d.tipo, d.financiacion, d.estado]
-          .join(" ").toLowerCase();
+        const hay = [d.contrato, d.contratista, d.objeto, d.equipo, d.tipo, d.financiacion, d.estado].join(" ").toLowerCase();
         okSearch = hay.includes(q);
       }
-
       return okEquipo && okAno && okEstado && okContr && okFin && okSearch;
     });
   }
 
   function uniqueSorted(rows, keyFn, isNumber=false){
-    const vals = [...new Set(rows.map(keyFn).filter(v=>v!=null && String(v).trim()!==""))];
-    return vals.sort((a,b)=>{
-      if (isNumber) return Number(a)-Number(b);
-      return String(a).localeCompare(String(b));
-    });
+    const vals = [...new Set(rows.map(keyFn).filter(v => v != null && String(v).trim() !== ""))];
+    return vals.sort((a,b)=> isNumber ? Number(a)-Number(b) : String(a).localeCompare(String(b)));
   }
 
   function setOptions(selId, values){
     const sel = el(selId);
-    const prev = new Set([...sel.selectedOptions].map(o=>o.value));
-    const keepTodos = prev.has("Todos") || prev.size===0;
+    const prev = new Set([...sel.selectedOptions].map(o => o.value));
+    const keepTodos = prev.has("Todos") || prev.size === 0;
 
-    // Rebuild options
     sel.innerHTML = "";
     const optTodos = document.createElement("option");
     optTodos.value = "Todos";
     optTodos.textContent = "Todos";
     sel.appendChild(optTodos);
 
-    values.forEach(v=>{
-      const o=document.createElement("option");
-      o.value=String(v);
-      o.textContent=String(v);
+    values.forEach(v => {
+      const o = document.createElement("option");
+      o.value = String(v);
+      o.textContent = String(v);
+      if (!keepTodos && prev.has(String(v))) o.selected = true;
       sel.appendChild(o);
     });
 
-    // Restore selection if possible
-    if (keepTodos){
-      [...sel.options].forEach(o=>o.selected = (o.value==="Todos"));
-      return false;
+    if (keepTodos || ![...sel.options].some(o => o.value !== "Todos" && o.selected)) {
+      [...sel.options].forEach(o => o.selected = (o.value === "Todos"));
     }
-
-    let anyKept = false;
-    [...sel.options].forEach(o=>{
-      if (o.value !== "Todos" && prev.has(o.value)){
-        o.selected = true;
-        anyKept = true;
-      }
-    });
-    if (!anyKept){
-      [...sel.options].forEach(o=>o.selected = (o.value==="Todos"));
-      return true; // selection changed
-    }
-    return false;
   }
 
   function refreshCascadeOptions(){
     if (updatingFilters) return;
     updatingFilters = true;
-
     let selectionChanged = false;
 
-    // Para cada filtro, calcula opciones posibles según los otros filtros
-    const rEq = rowsForOptions("filterEquipo");
-    selectionChanged = setOptions("filterEquipo", uniqueSorted(rEq, d=>d.equipo)) || selectionChanged;
+    const cfg = [
+      ["filterEquipo", d => d.equipo, false],
+      ["filterAno", d => d.ano, true],
+      ["filterEstado", d => d.estado ?? "—", false],
+      ["filterContratista", d => d.contratista, false],
+      ["filterFinanciacion", d => d.financiacion, false]
+    ];
 
-    const rAno = rowsForOptions("filterAno");
-    selectionChanged = setOptions("filterAno", uniqueSorted(rAno, d=>d.ano, true)) || selectionChanged;
+    cfg.forEach(([id, getter, isNumber]) => {
+      const rows = rowsForOptions(id);
+      const vals = uniqueSorted(rows, getter, isNumber);
+      const sel = el(id);
+      const before = [...sel.selectedOptions].map(o => o.value).join("|");
+      setOptions(id, vals);
+      const after = [...sel.selectedOptions].map(o => o.value).join("|");
+      if (before !== after) selectionChanged = true;
 
-    const rEst = rowsForOptions("filterEstado");
-    selectionChanged = setOptions("filterEstado", uniqueSorted(rEst, d=>d.estado)) || selectionChanged;
-
-    const rCon = rowsForOptions("filterContratista");
-    selectionChanged = setOptions("filterContratista", uniqueSorted(rCon, d=>d.contratista)) || selectionChanged;
-
-    const rFin = rowsForOptions("filterFinanciacion");
-    selectionChanged = setOptions("filterFinanciacion", uniqueSorted(rFin, d=>d.financiacion)) || selectionChanged;
-
-    // Actualiza el texto mostrado en los multi-select (si existen)
-    ["filterEquipo","filterAno","filterEstado","filterContratista","filterFinanciacion"].forEach(selId=>{
-      const root = document.querySelector(`.ms[data-for="${selId}"]`);
-      const sel = el(selId);
-      if (!root || !sel) return;
-      const val = root.querySelector(".msValue");
-      const chosen = [...sel.selectedOptions].map(o=>o.value).filter(v=>v);
-      if (!chosen.length || chosen.includes("Todos")) val.textContent = "Todos";
-      else if (chosen.length === 1) val.textContent = chosen[0];
-      else val.textContent = `${chosen.length} seleccionados`;
-    });
-
-    // Si algún desplegable está abierto, vuelve a dibujar su menú (porque el <select> se puede reconstruir)
-    document.querySelectorAll(".ms.open").forEach(ms=>{
-      const selId = ms.getAttribute("data-for");
-      const sel = el(selId);
-      const menu = ms.querySelector(".msMenu");
-      const val = ms.querySelector(".msValue");
-      const btn = ms.querySelector(".msBtn");
-      if (!sel || !menu) return;
-
-      // Re-render del menú (misma lógica que initMultiSelect, pero simple)
-      menu.innerHTML = "";
-      const hint = document.createElement("div");
-      hint.className = "msHint";
-      hint.textContent = "Selecciona una o varias opciones";
-      menu.appendChild(hint);
-
-      [...sel.options].forEach(opt=>{
-        const item = document.createElement("div");
-        item.className = "msItem" + (opt.selected ? " selected" : "");
-        const mark = document.createElement("span"); mark.className="mark";
-        const lbl = document.createElement("div"); lbl.className="lbl"; lbl.textContent=opt.value;
-        item.appendChild(mark); item.appendChild(lbl);
-        item.addEventListener("click",(e)=>{
-          e.preventDefault(); e.stopPropagation();
-          const value = opt.value;
-          const optNow = [...sel.options].find(o=>o.value===value);
-          if (!optNow) return;
-          if (optNow.value==="Todos"){
-            [...sel.options].forEach(o => o.selected = (o.value==="Todos"));
-          } else {
-            [...sel.options].forEach(o => { if (o.value==="Todos") o.selected=false; });
-            optNow.selected = !optNow.selected;
-            const any = [...sel.options].some(o => o.value!=="Todos" && o.selected);
-            if (!any) [...sel.options].forEach(o => o.selected = (o.value==="Todos"));
-          }
-          sel.dispatchEvent(new Event("change",{bubbles:true}));
-        });
-        menu.appendChild(item);
-      });
-
-      // Actualiza etiqueta
-      const chosen = [...sel.selectedOptions].map(o=>o.value).filter(v=>v);
-      if (!chosen.length || chosen.includes("Todos")) val.textContent="Todos";
-      else if (chosen.length===1) val.textContent=chosen[0];
-      else val.textContent = `${chosen.length} seleccionados`;
-
-      // Mantén aria-expanded
-      if (btn) btn.setAttribute("aria-expanded","true");
+      const root = document.querySelector(`.ms[data-for="${id}"]`);
+      if (root && root._renderMenu) {
+        root._renderMenu();
+        root._setLabel();
+      }
     });
 
     updatingFilters = false;
-
-    // Si algún filtro quedó sin opciones seleccionadas válidas, re-render
     if (selectionChanged) render();
   }
 
-
-function renderKPIs(rows){
+  function renderKPIs(rows){
     el("kpiTotal").textContent = rows.length;
-
     const total = rows.reduce((a,r)=>a + (Number(r.valor_total)||0), 0);
     const ej = rows.reduce((a,r)=>a + (Number(r.valor_ejecutado)||0), 0);
-    const pctAvg = total ? (ej/total) : 0;
+    const pctAvg = rows.length ? rows.reduce((a,r)=>a + (Number(r.pct_ejecucion)||0), 0) / rows.length : 0;
 
     el("kpiValorTotal").textContent = COP.format(total);
     el("kpiEjecutado").textContent = COP.format(ej);
-    const pctVal = pctAvg;
-    const pctTxt = (pctVal*100).toFixed(1) + "%";
+    const pctTxt = (pctAvg * 100).toFixed(1) + "%";
     el("kpiPct").innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
         <div style="font-weight:800">${pctTxt}</div>
@@ -920,7 +641,7 @@ function renderKPIs(rows){
     const tb = el("tbody");
     tb.innerHTML = "";
 
-    rows.forEach(r=>{
+    rows.forEach(r => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td class="mono">${r.contrato}</td>
@@ -930,19 +651,14 @@ function renderKPIs(rows){
         <td><span class="chip">${r.estado || "—"}</span></td>
         <td class="right mono">${COP.format(Number(r.valor_total||0))}</td>
         <td class="right mono">${COP.format(Number(r.valor_ejecutado||0))}</td>
-        <td class="right mono" style="text-align:center">${(() => { const p = Math.max(0, Math.min(1, Number(r.pct_ejecucion||0))); const pct = (p*100).toFixed(1); return `<div class=\"progress\"><div class=\"progressText mono\">${pct}%</div><div class=\"progressTrack\"><div class=\"progressFill\" style=\"width:${pct}%\"></div></div></div>`; })()}</td>
-        <td>
-          <button class="btn btnHistorial" type="button" data-contrato="${encodeURIComponent(r.contrato)}">📚 Historial</button>
-        </td>
+        <td class="right mono" style="text-align:center">${(() => { const p = Math.max(0, Math.min(1, Number(r.pct_ejecucion||0))); const pct = (p*100).toFixed(1); return `<div class="progress"><div class="progressText mono">${pct}%</div><div class="progressTrack"><div class="progressFill" style="width:${pct}%"></div></div></div>`; })()}</td>
+        <td><button class="btn" type="button" data-contrato="${encodeURIComponent(r.contrato)}">📚 Historial</button></td>
       `;
       tb.appendChild(tr);
     });
 
     el("badgeTabla").textContent = rows.length + " filas";
   }
-
-  // Charts
-  let chartEstado, chartEquipo;
 
   function groupCount(rows, key){
     const m = {};
@@ -954,7 +670,6 @@ function renderKPIs(rows){
   }
 
   function buildOrUpdateCharts(rows){
-    // Estado (dona)
     const estadoMap = groupCount(rows, "estado");
     const estadoLabels = Object.keys(estadoMap);
     const estadoValues = Object.values(estadoMap);
@@ -962,123 +677,82 @@ function renderKPIs(rows){
 
     const ctxE = document.getElementById("chartEstado");
     if (chartEstado) chartEstado.destroy();
-    const colorPorEstado = {
-      "En Ejecución": "#9A3A6A",
-      "Terminado": "#B86A2A"
-    };
+    const colorPorEstado = { "En Ejecución": "#9A3A6A", "Terminado": "#B86A2A" };
     const colores = estadoLabels.map(e => colorPorEstado[e] || "#999");
 
     chartEstado = new Chart(ctxE, {
-      type: "doughnut",
-      data: { labels: estadoLabels, datasets: [{ data: estadoValues, borderWidth: 2, borderColor:"#ffffff", backgroundColor: colores }] },
-      options: {
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ position:"bottom", labels:{ color:"rgba(17,24,39,0.75)" } } }
-      }
+      type:"doughnut",
+      data:{ labels:estadoLabels, datasets:[{ data:estadoValues, backgroundColor:colores, borderWidth:0 }] },
+      options:{ responsive:true, plugins:{ legend:{ position:"bottom" } } }
     });
 
-    // Equipo (barras)
-    const eqMap = groupCount(rows, "equipo");
-    const eqLabels = Object.keys(eqMap);
-    const eqValues = Object.values(eqMap);
-    el("badgeEquipo").textContent = eqLabels.length + " equipos";
+    const equipoMap = groupCount(rows, "equipo");
+    const equipoLabels = Object.keys(equipoMap);
+    const equipoValues = Object.values(equipoMap);
+    el("badgeEquipo").textContent = equipoLabels.length + " equipos";
 
     const ctxQ = document.getElementById("chartEquipo");
     if (chartEquipo) chartEquipo.destroy();
     chartEquipo = new Chart(ctxQ, {
-      type: "bar",
-      data: { labels: eqLabels, datasets: [{ label:"Contratos", data:eqValues, borderWidth:1, borderRadius:10 }] },
-      options: {
-        responsive:true, maintainAspectRatio:false,
+      type:"bar",
+      data:{ labels:equipoLabels, datasets:[{ label:"Contratos", data:equipoValues, backgroundColor:"#2BA7B5", borderRadius:8 }] },
+      options:{
+        responsive:true,
         plugins:{ legend:{ display:false } },
-        scales:{
-          x:{ ticks:{ color:"rgba(17,24,39,0.75)" }, grid:{ color:"rgba(255,255,255,0.08)" } },
-          y:{ ticks:{ color:"rgba(17,24,39,0.75)" }, grid:{ color:"rgba(255,255,255,0.08)" }, beginAtZero:true, precision:0 }
-        }
+        scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } }
       }
     });
   }
 
-  
-  
-function render(){
+  function render(){
     refreshCascadeOptions();
     const rows = applyFilters();
     renderKPIs(rows);
     renderTable(rows);
     buildOrUpdateCharts(rows);
+    actualizarMapaGeneral(rows);
   }
 
-  const DEFAULT_ANO = "2025"; // filtro por defecto
   function initMultiSelect(selId){
     const sel = el(selId);
     const root = document.querySelector(`.ms[data-for="${selId}"]`);
     if (!sel || !root) return;
     const btn = root.querySelector(".msBtn");
-    const val = root.querySelector(".msValue");
     const menu = root.querySelector(".msMenu");
 
     const setLabel = () => {
-      const chosen = [...sel.selectedOptions].map(o=>o.value).filter(v=>v);
-      if (!chosen.length || chosen.includes("Todos")) { val.textContent = "Todos"; return; }
-      if (chosen.length === 1) { val.textContent = chosen[0]; return; }
-      val.textContent = `${chosen.length} seleccionados`;
+      const vals = [...sel.selectedOptions].map(o=>o.value).filter(v=>v!=="Todos");
+      btn.innerHTML = vals.length ? vals.slice(0,2).join(", ") + (vals.length > 2 ? ` +${vals.length-2}` : "") : `<span class="ph">Todos</span>`;
     };
 
     const renderMenu = () => {
       menu.innerHTML = "";
-      const hint = document.createElement("div");
-      hint.className = "msHint";
-      hint.textContent = "Selecciona una o varias opciones";
-      menu.appendChild(hint);
-
       const makeItem = (opt) => {
-        const value = opt.value; // guarda el valor (evita referencias viejas)
-        const item = document.createElement("div");
-        item.className = "msItem" + (opt.selected ? " selected" : "");
-        const mark = document.createElement("span");
-        mark.className = "mark";
-        const lbl = document.createElement("div");
-        lbl.className = "lbl";
-        lbl.textContent = value;
-
-        item.appendChild(mark);
-        item.appendChild(lbl);
-
+        const item = document.createElement("label");
+        item.className = "msItem";
+        item.innerHTML = `<input type="checkbox" ${opt.selected ? "checked" : ""}> <span>${opt.textContent}</span>`;
         item.addEventListener("click", (e)=>{
-          e.preventDefault(); e.stopPropagation();
-
-          // Busca la opción ACTUAL en el <select> (por si se reconstruyó por filtros en cascada)
-          const optNow = [...sel.options].find(o => o.value === value);
-          if (!optNow) return;
-
-          if (optNow.value === "Todos"){
-            // Selecciona solo "Todos"
+          e.preventDefault();
+          if (opt.value === "Todos") {
             [...sel.options].forEach(o => o.selected = (o.value === "Todos"));
           } else {
-            // Quita "Todos" y alterna esta opción
             [...sel.options].forEach(o => { if (o.value === "Todos") o.selected = false; });
-            optNow.selected = !optNow.selected;
-
-            // Permite multi-selección: NO deselecciona las demás opciones
-
-            // Si queda vacío, vuelve a Todos
+            opt.selected = !opt.selected;
             const any = [...sel.options].some(o => o.value !== "Todos" && o.selected);
             if (!any) [...sel.options].forEach(o => o.selected = (o.value === "Todos"));
           }
-
-          // Vuelve a pintar el menú con el estado actual
           renderMenu();
           setLabel();
-
-          // Dispara change para que el dashboard y filtros en cascada se actualicen
-          sel.dispatchEvent(new Event("change", { bubbles: true }));
+          sel.dispatchEvent(new Event("change", { bubbles:true }));
         });
         return item;
       };
 
       [...sel.options].forEach(opt => menu.appendChild(makeItem(opt)));
     };
+
+    root._renderMenu = renderMenu;
+    root._setLabel = setLabel;
 
     btn.addEventListener("click", (e)=>{
       e.stopPropagation();
@@ -1097,36 +771,112 @@ function render(){
     document.querySelectorAll(".msBtn").forEach(b=>b.setAttribute("aria-expanded","false"));
   });
 
-  async function start(){
-    try{
-      await loadDataFromSheet();
-      hideStatus();
-    } catch (e){
-      console.error(e);
-      setStatus("❌ No se pudieron cargar los datos. Revisa que la hoja esté Publicado en la web (CSV) o intenta recargar. Detalle: " + (e?.message || e), true);
-    }
+  function fmtDate(s){ return s || "—"; }
+  function fmtNum(n){ return COP.format(Number(n || 0)); }
 
-    fillFilters();
+  function abrirHistorial(contratoId){
+    const id = decodeURIComponent(String(contratoId || "")).trim();
+    const r = data.find(x => String(x.contrato).trim() === id);
+    if (!r) return;
 
-    // Aplica por defecto Año = 2025 si existe en el selector
-    const anoSel = el("filterAno");
-    if (anoSel && [...anoSel.options].some(o => o.value === DEFAULT_ANO)) {
-      anoSel.value = DEFAULT_ANO;
-    }
+    const overlay = el("modalOverlay");
+    const body = el("modalBody");
+    el("modalSub").textContent = `Contrato: ${r.contrato} · Año: ${r.ano ?? "—"} · Estado: ${r.estado || "—"}`;
 
-    // Inicializa UI desplegable multi-select
-    ["filterEquipo","filterAno","filterEstado","filterContratista","filterFinanciacion"].forEach(initMultiSelect);
+    const pct = Math.max(0, Math.min(1, Number(r.pct_ejecucion||0)));
+    const pctTxt = (pct*100).toFixed(1) + "%";
 
-    // Listeners
-    ["filterEquipo","filterAno","filterContratista","filterEstado","filterFinanciacion"].forEach(id=> el(id).addEventListener("change", render));
-    el("searchBox").addEventListener("input", render);
+    body.innerHTML = `
+      <div class="detailCard">
+        <h4>Información general</h4>
+        <div class="kv">
+          <div class="k">Contrato</div><div class="v mono">${r.contrato}</div>
+          <div class="k">Equipo</div><div class="v">${r.equipo}</div>
+          <div class="k">Contratista</div><div class="v">${r.contratista}</div>
+          <div class="k">Objeto</div><div class="v">${r.objeto}</div>
+          <div class="k">Tipo</div><div class="v">${r.tipo}</div>
+          <div class="k">Financiación</div><div class="v">${r.financiacion}</div>
+          <div class="k">Estado</div><div class="v">${r.estado}</div>
+          <div class="k">Fecha inicio</div><div class="v">${fmtDate(r.fecha_inicio)}</div>
+          <div class="k">Fecha fin</div><div class="v">${fmtDate(r.fecha_fin)}</div>
+          <div class="k">Valor total</div><div class="v mono">${fmtNum(r.valor_total)}</div>
+          <div class="k">Valor ejecutado</div><div class="v mono">${fmtNum(r.valor_ejecutado)}</div>
+          <div class="k">Por ejecutar</div><div class="v mono">${fmtNum(r.valor_por_ejecutar)}</div>
+          <div class="k">% ejecución</div>
+          <div class="v">
+            <div class="progressText mono">${pctTxt}</div>
+            <div class="progress"><div class="progressTrack"><div class="progressFill" style="width:${pctTxt}"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="detailCard">
+        <h4>Resumen</h4>
+        <div class="timeline">
+          <div class="tlItem"><div class="tlDate">Inicio</div><div class="tlBox">${fmtDate(r.fecha_inicio)}</div></div>
+          <div class="tlItem"><div class="tlDate">Fin</div><div class="tlBox">${fmtDate(r.fecha_fin)}</div></div>
+          <div class="tlItem"><div class="tlDate">Estado</div><div class="tlBox">${r.estado || "—"}</div></div>
+          <div class="tlItem"><div class="tlDate">Financiación</div><div class="tlBox">${r.financiacion || "—"}</div></div>
+        </div>
+      </div>
+    `;
 
-    // Primer pintado
-    refreshCascadeOptions();
-    render();
+    overlay.classList.add("show");
+    overlay.setAttribute("aria-hidden", "false");
   }
 
-  start();
+  function cerrarHistorial(){
+    const overlay = el("modalOverlay");
+    overlay.classList.remove("show");
+    overlay.setAttribute("aria-hidden", "true");
+  }
+
+  async function bootstrap(){
+    try {
+      await loadData();
+      fillFilters();
+      refreshCascadeOptions();
+
+      const anoSel = el("filterAno");
+      if ([...anoSel.options].some(o => o.value === DEFAULT_ANO)) {
+        [...anoSel.options].forEach(o => o.selected = (o.value === DEFAULT_ANO));
+      }
+
+      ["filterEquipo","filterAno","filterEstado","filterContratista","filterFinanciacion"].forEach(initMultiSelect);
+      ["filterEquipo","filterAno","filterContratista","filterEstado","filterFinanciacion"].forEach(id=> el(id).addEventListener("change", render));
+      el("searchBox").addEventListener("input", render);
+      render();
+    } catch (error) {
+      console.error(error);
+      const main = document.querySelector("main .wrap") || document.body;
+      const err = document.createElement("div");
+      err.className = "card";
+      err.style.padding = "18px";
+      err.style.marginBottom = "18px";
+      err.innerHTML = `<strong>No se pudieron cargar los datos.</strong><div style="margin-top:8px;color:#6B7280">${error.message}</div>`;
+      main.prepend(err);
+    }
+  }
+
+  function resetearTodo(){
+    location.reload();
+  }
+
+  document.addEventListener("click", (e)=>{
+    const btn = e.target.closest("button[data-contrato]");
+    if (!btn) return;
+    e.preventDefault();
+    abrirHistorial(btn.getAttribute("data-contrato") || "");
+  });
+
+  el("modalOverlay").addEventListener("click", (e)=>{
+    if (e.target.id === "modalOverlay") cerrarHistorial();
+  });
+
+  document.addEventListener("keydown", (e)=>{
+    if (e.key === "Escape") cerrarHistorial();
+  });
+
+  bootstrap();
 </script>
 
 <footer class="footer">
@@ -1134,8 +884,6 @@ function render(){
   <div class="caption">Secretaría de suministros y servicios</div>
 </footer>
 
-
-<!-- Modal Historial / Detalle de contrato -->
 <div id="modalOverlay" class="modalOverlay" aria-hidden="true">
   <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modalHeader">
