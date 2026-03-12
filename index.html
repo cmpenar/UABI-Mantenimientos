@@ -695,6 +695,28 @@
       font-size:12px;
     }
 
+    .updateHeaderLine{
+      display:block;
+      background:#F3F4F6;
+      border:1px solid var(--stroke);
+      border-radius:12px;
+      padding:12px 14px;
+      font-size:16px;
+      font-weight:800;
+      color:var(--text);
+      line-height:1.3;
+    }
+
+    .updateEditedAt{
+      margin-top:8px;
+      color:#8A94A3;
+      font-size:12px;
+      background:#F8FAFC;
+      border-radius:10px;
+      padding:6px 10px;
+      display:inline-block;
+    }
+
     .updateBadge{
       white-space:nowrap;
       border-radius:999px;
@@ -2325,9 +2347,9 @@
           ${updates.map((item, index) => `
             <article class="updateItem" data-rol-usuario="${escapeHtml(item.rol_usuario || "")}" data-tipo-actualizacion="${escapeHtml(item.tipo_actualizacion || "")}">
               <div class="updateTop">
-                <div>
-                  <div class="updateTitle">${escapeHtml(item.tipo_actualizacion || "Actualización")}</div>
-                  <div class="updateMeta">${escapeHtml(item.rol_usuario || "Sin rol")} · ${escapeHtml(formatDateTime(item.marca_temporal || item.fecha_observacion))}</div>
+                <div style="flex:1 1 auto; min-width:0;">
+                  <div class="updateHeaderLine">${escapeHtml(item.tipo_actualizacion || "Actualización")} - ${escapeHtml(item.rol_usuario || "Sin rol")} (${escapeHtml(item.fecha_observacion || "—")})</div>
+                  <div class="updateEditedAt">editado el: ${escapeHtml(formatDateTime(item.marca_temporal || item.fecha_observacion))}</div>
                 </div>
                 <span class="updateBadge">#${updates.length - index}</span>
               </div>
@@ -2482,10 +2504,10 @@
           ${updates.map(item => `
             <article class="summaryCard" data-rol-usuario="${escapeHtml(item.rol_usuario || "")}" data-tipo-actualizacion="${escapeHtml(item.tipo_actualizacion || "")}">
               <div class="summaryTop">
-                <div>
-                  <div class="updateTitle">${escapeHtml(item.tipo_actualizacion || "Actualización")}</div>
-                  <div class="summaryContract mono">Contrato ${escapeHtml(item.contrato || "—")}</div>
-                  <div class="summaryMeta">${escapeHtml(item.rol_usuario || "Sin rol")} · ${escapeHtml(formatDateTime(item.marca_temporal || item.fecha_observacion))}</div>
+                <div style="flex:1 1 auto; min-width:0;">
+                  <div class="updateHeaderLine">${escapeHtml(item.tipo_actualizacion || "Actualización")} - ${escapeHtml(item.rol_usuario || "Sin rol")} (${escapeHtml(item.fecha_observacion || "—")})</div>
+                  <div class="updateEditedAt">editado el: ${escapeHtml(formatDateTime(item.marca_temporal || item.fecha_observacion))}</div>
+                  <div class="summaryContract mono" style="margin-top:10px;">Contrato ${escapeHtml(item.contrato || "—")}</div>
                 </div>
                 <span class="updateBadge">${escapeHtml(item.fecha_observacion || "—")}</span>
               </div>
