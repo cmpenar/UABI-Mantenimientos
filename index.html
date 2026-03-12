@@ -23,7 +23,9 @@
       --menu-hover:#F3F7F9;
       --menu-selected:#E8F7F9;
     }
+
     *{box-sizing:border-box}
+
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -34,27 +36,45 @@
         linear-gradient(180deg,var(--bg),#F3EFE5);
       min-height:100vh;
     }
+
     header{
-      position:sticky; top:0; z-index:10;
+      position:sticky;
+      top:0;
+      z-index:10;
       background: var(--brand-blue);
       color:white;
       border-bottom:1px solid rgba(0,0,0,0.08);
     }
+
     .wrap{max-width:1200px; margin:0 auto; padding:16px 18px;}
-    .top{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
     .brand{display:flex; align-items:center; gap:12px;}
+
     .logo{
-      width:40px; height:40px; border-radius:14px;
+      width:40px;
+      height:40px;
+      border-radius:14px;
       background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,255,255,0.78));
       box-shadow: 0 10px 24px rgba(17,24,39,0.12);
-      display:grid; place-items:center;
+      display:grid;
+      place-items:center;
       border:1px solid rgba(17,24,39,0.14);
       color:#111827;
       font-weight:900;
       letter-spacing:0.5px;
     }
+
     h1{margin:0; font-size:16px; letter-spacing:0.2px}
     .sub{margin-top:3px; font-size:12px; color:rgba(255,255,255,0.85)}
+
     .filters{
       display:grid;
       grid-template-columns: 1.2fr 0.7fr 0.9fr 2.2fr;
@@ -63,21 +83,27 @@
       width:100%;
       margin-top:10px;
     }
+
     .filters .select{min-width:0;}
     .filters .search{width:100%;}
     .filters [data-span="full"]{grid-column: 1 / -1;}
+
     @media (max-width: 980px){
-      .filters{grid-template-columns: 1fr; }
+      .filters{grid-template-columns: 1fr;}
       .filters [data-span="full"]{grid-column:auto;}
     }
+
     .select{
-      display:flex; align-items:center; gap:8px;
+      display:flex;
+      align-items:center;
+      gap:8px;
       padding:10px 12px;
       border:1px solid var(--stroke);
       background: var(--surface);
       border-radius:14px;
       box-shadow: 0 8px 18px rgba(0,0,0,0.08);
     }
+
     select, input{
       width:100%;
       appearance:none;
@@ -87,20 +113,57 @@
       outline:none;
       font-size:13px;
     }
+
     input::placeholder{color: rgba(107,114,128,0.65); font-weight:400;}
+
     .select .hint{
       font-size:12px;
       color: var(--text);
       font-weight:700;
       white-space:nowrap;
     }
+
     main .wrap{padding-top:18px; padding-bottom:28px;}
-    .kpis{display:grid; grid-template-columns: repeat(12, 1fr); gap:14px;}
-    .card{background: var(--surface); border:1px solid var(--stroke); border-radius:18px; box-shadow: var(--shadow);}
-    .kpi{grid-column: span 3; padding:16px;}
-    .kpi .label{font-size:12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.35px}
-    .kpi .value{margin-top:8px; font-size:28px; font-weight:800; letter-spacing:-0.3px}
-    .kpi .mini{margin-top:8px; font-size:12px; color:var(--muted)}
+
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:14px;
+    }
+
+    .card{
+      background: var(--surface);
+      border:1px solid var(--stroke);
+      border-radius:18px;
+      box-shadow: var(--shadow);
+    }
+
+    .kpi{
+      grid-column: span 3;
+      padding:16px;
+    }
+
+    .kpi .label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.35px
+    }
+
+    .kpi .value{
+      margin-top:8px;
+      font-size:28px;
+      font-weight:800;
+      letter-spacing:-0.3px
+    }
+
+    .kpi .mini{
+      margin-top:8px;
+      font-size:12px;
+      color:var(--muted)
+    }
+
     @media (max-width: 960px){ .kpi{grid-column: span 6;} }
     @media (max-width: 640px){ .kpi{grid-column: span 12;} }
 
@@ -111,6 +174,7 @@
       margin-top:14px;
       align-items:stretch;
     }
+
     @media (max-width: 980px){ .grid{grid-template-columns:1fr;} }
 
     .panel{
@@ -120,45 +184,152 @@
       display:flex;
       flex-direction:column;
     }
+
     .panel h3{margin:0 0 10px; font-size:14px}
-    .panel .meta{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; color:var(--muted); font-size:12px}
+
+    .panel .meta{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:8px;
+      color:var(--muted);
+      font-size:12px
+    }
+
     .panel canvas{
       flex:1;
       width:100% !important;
       max-height:260px !important;
     }
+
     #chartEstado,
     #chartEquipo{
       height:260px !important;
     }
 
-    .tableWrap{margin-top:14px; overflow:auto;}
-    table{width:100%; border-collapse:collapse; min-width:1100px;}
-    th, td{padding:10px 12px; border-bottom:1px solid rgba(17,24,39,0.06); vertical-align:middle;}
-    th{font-size:12px; color:var(--muted); text-align:left; position:sticky; top:0; background:var(--surface); z-index:1}
+    .tableWrap{
+      margin-top:14px;
+      overflow:auto;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:1100px;
+    }
+
+    th, td{
+      padding:10px 12px;
+      border-bottom:1px solid rgba(17,24,39,0.06);
+      vertical-align:middle;
+    }
+
+    th{
+      font-size:12px;
+      color:var(--muted);
+      text-align:left;
+      position:sticky;
+      top:0;
+      background:var(--surface);
+      z-index:1
+    }
+
     td{font-size:13px;}
     tr:hover td{background: rgba(43,167,181,0.03);}
     .right{text-align:right}
     .mono{font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1;}
-    .chip{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--stroke); border-radius:999px; padding:4px 8px; font-size:12px; background:#fff}
-    .footer{max-width:1200px; margin: 0 auto 18px; padding:0 18px; color:#6B7280; font-size:12px; display:flex; align-items:center; gap:10px; justify-content:center; flex-direction:column;}
-    .footer img{width:180px; opacity:0.95}
-    .toolbar{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center; gap:8px;
-      border:none; padding:10px 14px; border-radius:12px; cursor:pointer;
-      background: linear-gradient(135deg, var(--brand-purple), #8A49B6);
-      color:white; font-weight:700; box-shadow: 0 10px 18px rgba(107,44,144,0.20);
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border:1px solid var(--stroke);
+      border-radius:999px;
+      padding:4px 8px;
+      font-size:12px;
+      background:#fff
     }
-    .btn.secondary{background:#fff; color:var(--text); border:1px solid var(--stroke); box-shadow:none;}
+
+    .footer{
+      max-width:1200px;
+      margin: 0 auto 18px;
+      padding:0 18px;
+      color:#6B7280;
+      font-size:12px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      justify-content:center;
+      flex-direction:column;
+    }
+
+    .footer img{width:180px; opacity:0.95}
+
+    .toolbar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border:none;
+      padding:10px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      background: linear-gradient(135deg, var(--brand-purple), #8A49B6);
+      color:white;
+      font-weight:700;
+      box-shadow: 0 10px 18px rgba(107,44,144,0.20);
+    }
+
+    .btn.secondary{
+      background:#fff;
+      color:var(--text);
+      border:1px solid var(--stroke);
+      box-shadow:none;
+    }
+
     .progress{min-width:110px;}
-    .progressTrack{height:8px; background:#EEF2F7; border-radius:999px; overflow:hidden;}
-    .progressFill{height:8px; background: linear-gradient(90deg, var(--brand-blue), #47C9D7); border-radius:999px;}
-    .progressText{font-size:12px; color:var(--muted); margin-bottom:4px;}
-    #mapaGeneral{height: 340px; border-radius:14px; overflow:hidden; border:1px solid var(--stroke);}
-    .wrapCell{max-width: 360px; white-space: normal; line-height:1.25}
+
+    .progressTrack{
+      height:8px;
+      background:#EEF2F7;
+      border-radius:999px;
+      overflow:hidden;
+    }
+
+    .progressFill{
+      height:8px;
+      background: linear-gradient(90deg, var(--brand-blue), #47C9D7);
+      border-radius:999px;
+    }
+
+    .progressText{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:4px;
+    }
+
+    #mapaGeneral{
+      height: 340px;
+      border-radius:14px;
+      overflow:hidden;
+      border:1px solid var(--stroke);
+    }
+
+    .wrapCell{
+      max-width: 360px;
+      white-space: normal;
+      line-height:1.25
+    }
 
     .ms{position:relative; width:100%;}
+
     .msBtn{
       width:100%;
       text-align:left;
@@ -170,7 +341,9 @@
       padding:0;
       min-height:24px;
     }
+
     .msBtn .ph{color:#4B5563}
+
     .msMenu{
       position:absolute;
       top:calc(100% + 8px);
@@ -187,7 +360,9 @@
       display:none;
       padding:6px 0;
     }
+
     .ms.open .msMenu{display:block;}
+
     .msItem{
       display:flex;
       align-items:center;
@@ -199,13 +374,16 @@
       font-size:13px;
       line-height:1.2;
     }
+
     .msItem:hover{background:var(--menu-hover);}
     .msItem.selected{background:var(--menu-selected);}
+
     .msItem input{
       width:auto;
       accent-color: var(--brand-blue);
       flex: 0 0 auto;
     }
+
     .msItem span{
       color:var(--menu-text);
       display:block;
@@ -213,44 +391,159 @@
     }
 
     .modalOverlay{
-      position:fixed; inset:0; background:rgba(15,23,42,0.45);
-      display:none; align-items:center; justify-content:center; padding:18px; z-index:1000;
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,0.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:1000;
     }
+
     .modalOverlay.show{display:flex;}
+
     .modalCard{
-      width:min(1100px, 100%); max-height:90vh; overflow:auto;
-      background:#fff; border:1px solid var(--stroke); border-radius:18px; box-shadow:var(--shadow);
+      width:min(1150px, 100%);
+      max-height:90vh;
+      overflow:auto;
+      background:#fff;
+      border:1px solid var(--stroke);
+      border-radius:18px;
+      box-shadow:var(--shadow);
     }
-    .modalHeader{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px 18px; border-bottom:1px solid rgba(17,24,39,0.08); position:sticky; top:0; background:#fff; z-index:2;}
+
+    .modalHeader{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      padding:16px 18px;
+      border-bottom:1px solid rgba(17,24,39,0.08);
+      position:sticky;
+      top:0;
+      background:#fff;
+      z-index:2;
+    }
+
     .modalTitle{font-size:18px; font-weight:800;}
     .modalSub{font-size:12px; color:var(--muted); margin-top:4px;}
-    .modalClose{border:none; background:#F3F4F6; width:36px; height:36px; border-radius:10px; cursor:pointer; font-size:18px;}
-    .modalBody{padding:18px; display:grid; grid-template-columns: 1.2fr 0.8fr; gap:16px;}
+
+    .modalClose{
+      border:none;
+      background:#F3F4F6;
+      width:36px;
+      height:36px;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:18px;
+    }
+
+    .modalBody{
+      padding:18px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
+    }
+
     @media (max-width: 900px){ .modalBody{grid-template-columns:1fr;} }
-    .detailCard{border:1px solid var(--stroke); border-radius:16px; padding:14px; background:#fff;}
-    .detailCard h4{margin:0 0 10px; font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.3px}
+
+    .detailCard{
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:14px;
+      background:#fff;
+    }
+
+    .detailCard h4{
+      margin:0 0 10px;
+      font-size:13px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.3px
+    }
+
     .kv{
       display:grid;
       grid-template-columns: 180px 1fr;
       gap:20px 18px;
       align-items:start;
     }
+
     .kv .k{
       font-size:12px;
       color:var(--muted);
       font-weight:700;
       padding-top:2px;
     }
+
     .kv .v{
       font-size:13px;
       color:var(--text);
       line-height:1.5;
       padding-bottom:4px;
     }
+
     .timeline{display:grid; gap:12px;}
-    .tlItem{display:grid; grid-template-columns: 110px 1fr; gap:10px; align-items:start;}
-    .tlDate{font-size:12px; color:var(--muted); font-weight:700;}
-    .tlBox{border:1px solid var(--stroke); border-radius:14px; padding:12px; background:#fff;}
+
+    .tlItem{
+      display:grid;
+      grid-template-columns: 110px 1fr;
+      gap:10px;
+      align-items:start;
+    }
+
+    .tlDate{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .tlBox{
+      border:1px solid var(--stroke);
+      border-radius:14px;
+      padding:12px;
+      background:#fff;
+    }
+
+    .histPct{
+      width:100%;
+      max-width:100%;
+    }
+
+    .histPctHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
+      font-size:14px;
+      color:#6B7280;
+      font-weight:700;
+    }
+
+    .histPctTrack{
+      width:100%;
+      height:16px;
+      background:#E5E7EB;
+      border-radius:999px;
+      overflow:hidden;
+    }
+
+    .histPctFill{
+      height:100%;
+      border-radius:999px;
+      background: linear-gradient(90deg, #2BA7B5, #47C9D7);
+    }
+
+    #mapaHistorial{
+      width:100%;
+      height:320px;
+      border-radius:14px;
+      overflow:hidden;
+      border:1px solid var(--stroke);
+      margin-top:12px;
+    }
   </style>
 </head>
 <body>
@@ -275,28 +568,48 @@
       <div class="select">
         <span class="hint">Equipo</span>
         <select id="filterEquipo" multiple hidden></select>
-        <div class="ms" data-for="filterEquipo"><button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button><div class="msMenu"></div></div>
+        <div class="ms" data-for="filterEquipo">
+          <button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button>
+          <div class="msMenu"></div>
+        </div>
       </div>
+
       <div class="select">
         <span class="hint">Año</span>
         <select id="filterAno" multiple hidden></select>
-        <div class="ms" data-for="filterAno"><button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button><div class="msMenu"></div></div>
+        <div class="ms" data-for="filterAno">
+          <button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button>
+          <div class="msMenu"></div>
+        </div>
       </div>
+
       <div class="select">
         <span class="hint">Estado</span>
         <select id="filterEstado" multiple hidden></select>
-        <div class="ms" data-for="filterEstado"><button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button><div class="msMenu"></div></div>
+        <div class="ms" data-for="filterEstado">
+          <button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button>
+          <div class="msMenu"></div>
+        </div>
       </div>
+
       <div class="select">
         <span class="hint">Contratista</span>
         <select id="filterContratista" multiple hidden></select>
-        <div class="ms" data-for="filterContratista"><button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button><div class="msMenu"></div></div>
+        <div class="ms" data-for="filterContratista">
+          <button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button>
+          <div class="msMenu"></div>
+        </div>
       </div>
+
       <div class="select" data-span="full">
         <span class="hint">Financiación</span>
         <select id="filterFinanciacion" multiple hidden></select>
-        <div class="ms" data-for="filterFinanciacion"><button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button><div class="msMenu"></div></div>
+        <div class="ms" data-for="filterFinanciacion">
+          <button class="msBtn" type="button" aria-expanded="false"><span class="ph">Todos</span></button>
+          <div class="msMenu"></div>
+        </div>
       </div>
+
       <div class="select search" data-span="full">
         <span class="hint">Buscar</span>
         <input id="searchBox" type="text" placeholder="Contrato, contratista, objeto, equipo..." />
@@ -308,30 +621,63 @@
 <main>
   <div class="wrap">
     <section class="kpis">
-      <div class="card kpi"><div class="label">Total contratos</div><div id="kpiTotal" class="value">0</div><div class="mini">Registros filtrados</div></div>
-      <div class="card kpi"><div class="label">Valor total</div><div id="kpiValorTotal" class="value mono">$0</div><div class="mini">Suma del valor contractual</div></div>
-      <div class="card kpi"><div class="label">Valor ejecutado</div><div id="kpiEjecutado" class="value mono">$0</div><div class="mini">Suma ejecutada</div></div>
-      <div class="card kpi"><div class="label">% ejecución promedio</div><div id="kpiPct" class="value">0%</div><div class="mini" id="kpiPctMini">Ejecución media</div></div>
+      <div class="card kpi">
+        <div class="label">Total contratos</div>
+        <div id="kpiTotal" class="value">0</div>
+        <div class="mini">Registros filtrados</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Valor total</div>
+        <div id="kpiValorTotal" class="value mono">$0</div>
+        <div class="mini">Suma del valor contractual</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Valor ejecutado</div>
+        <div id="kpiEjecutado" class="value mono">$0</div>
+        <div class="mini">Suma ejecutada</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">% ejecución promedio</div>
+        <div id="kpiPct" class="value">0%</div>
+        <div class="mini" id="kpiPctMini">Ejecución media</div>
+      </div>
     </section>
 
     <section class="grid">
       <div class="card panel">
-        <div class="meta"><h3>Contratos por estado</h3><span id="badgeEstado">0 estados</span></div>
+        <div class="meta">
+          <h3>Contratos por estado</h3>
+          <span id="badgeEstado">0 estados</span>
+        </div>
         <canvas id="chartEstado"></canvas>
       </div>
+
       <div class="card panel">
-        <div class="meta"><h3>Contratos por equipo</h3><span id="badgeEquipo">0 equipos</span></div>
+        <div class="meta">
+          <h3>Contratos por equipo</h3>
+          <span id="badgeEquipo">0 equipos</span>
+        </div>
         <canvas id="chartEquipo"></canvas>
       </div>
     </section>
 
     <section class="card panel" style="margin-top:14px;">
-      <div class="meta"><h3>Mapa general</h3><span id="badgeMapa">0 puntos</span></div>
+      <div class="meta">
+        <h3>Mapa general</h3>
+        <span id="badgeMapa">0 puntos</span>
+      </div>
       <div id="mapaGeneral"></div>
     </section>
 
     <section class="card panel tableWrap" style="height:auto; min-height:auto;">
-      <div class="meta"><h3>Tabla de contratos</h3><span id="badgeTabla">0 filas</span></div>
+      <div class="meta">
+        <h3>Tabla de contratos</h3>
+        <span id="badgeTabla">0 filas</span>
+      </div>
+
       <table>
         <thead>
           <tr>
@@ -378,7 +724,12 @@
   let pointsData = [];
 
   function el(id){ return document.getElementById(id); }
-  const COP = new Intl.NumberFormat("es-CO", { style:"currency", currency:"COP", maximumFractionDigits:0 });
+
+  const COP = new Intl.NumberFormat("es-CO", {
+    style:"currency",
+    currency:"COP",
+    maximumFractionDigits:0
+  });
 
   function parseCSV(text) {
     const rows = [];
@@ -412,16 +763,19 @@
         i += 1;
         continue;
       }
+
       if (char === ',') {
         row.push(value);
         value = "";
         i += 1;
         continue;
       }
+
       if (char === "\r") {
         i += 1;
         continue;
       }
+
       if (char === "\n") {
         row.push(value);
         rows.push(row);
@@ -460,11 +814,13 @@
     if (value == null) return 0;
     const raw = String(value).trim();
     if (!raw) return 0;
+
     const cleaned = raw
       .replace(/\$/g, "")
       .replace(/\s/g, "")
       .replace(/\./g, "")
       .replace(/,/g, ".");
+
     const n = Number(cleaned);
     return Number.isFinite(n) ? n : 0;
   }
@@ -734,6 +1090,9 @@
   let mapaGeneral;
   let markersLayer;
   let chartEstado, chartEquipo;
+  let mapaHistorial = null;
+  let markersHistorial = null;
+
   const DEFAULT_ANO = "2025";
 
   function initMap(){
@@ -747,6 +1106,7 @@
 
   function actualizarMapaGeneral(rows){
     if (!mapaGeneral) initMap();
+
     markersLayer.clearLayers();
 
     const contratosFiltrados = new Map(
@@ -802,6 +1162,67 @@
     setTimeout(() => mapaGeneral.invalidateSize(), 50);
   }
 
+  function renderMapaHistorial(contrato){
+    const puntos = pointsData.filter(
+      p => cleanText(p.contrato) === cleanText(contrato)
+    );
+
+    const mapWrap = document.getElementById("mapaHistorial");
+    const emptyWrap = document.getElementById("mapaHistorialEmpty");
+
+    if (!mapWrap) return;
+
+    if (!puntos.length) {
+      mapWrap.style.display = "none";
+      if (emptyWrap) emptyWrap.style.display = "block";
+      return;
+    }
+
+    mapWrap.style.display = "block";
+    if (emptyWrap) emptyWrap.style.display = "none";
+
+    if (!mapaHistorial) {
+      mapaHistorial = L.map("mapaHistorial", {
+        zoomControl: true,
+        scrollWheelZoom: true
+      });
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(mapaHistorial);
+
+      markersHistorial = L.layerGroup().addTo(mapaHistorial);
+    } else {
+      markersHistorial.clearLayers();
+    }
+
+    puntos.forEach(p => {
+      const marker = L.circleMarker([p.lat, p.lon], {
+        radius: 7,
+        weight: 1,
+        color: "#ffffff",
+        fillColor: "#2BA7B5",
+        fillOpacity: 0.95
+      }).bindPopup(`
+        <strong>Contrato:</strong> ${contrato}<br>
+        ${p.nombre_punto ? `<strong>Punto:</strong> ${p.nombre_punto}<br>` : ""}
+        ${p.direccion ? `<strong>Dirección:</strong> ${p.direccion}<br>` : ""}
+        ${p.barrio ? `<strong>Barrio:</strong> ${p.barrio}<br>` : ""}
+        ${p.comuna ? `<strong>Comuna:</strong> ${p.comuna}<br>` : ""}
+      `);
+      markersHistorial.addLayer(marker);
+    });
+
+    const bounds = L.latLngBounds(puntos.map(p => [p.lat, p.lon]));
+    mapaHistorial.fitBounds(bounds, { padding:[20,20] });
+
+    setTimeout(() => {
+      mapaHistorial.invalidateSize();
+      mapaHistorial.fitBounds(bounds, { padding:[20,20] });
+    }, 80);
+  }
+
   function unique(arr, keyFn){
     return [...new Set(arr.map(keyFn).filter(v => v != null && String(v).trim() !== ""))];
   }
@@ -816,11 +1237,13 @@
     const fill = (selId, values) => {
       const sel = el(selId);
       sel.innerHTML = "";
+
       const todos = document.createElement("option");
       todos.value = "Todos";
       todos.textContent = "Todos";
       todos.selected = true;
       sel.appendChild(todos);
+
       values.forEach(v => {
         const o = document.createElement("option");
         o.value = String(v);
@@ -908,6 +1331,7 @@
     const keepTodos = prev.has("Todos") || prev.size === 0;
 
     sel.innerHTML = "";
+
     const optTodos = document.createElement("option");
     optTodos.value = "Todos";
     optTodos.textContent = "Todos";
@@ -929,6 +1353,7 @@
   function refreshCascadeOptions(){
     if (updatingFilters) return;
     updatingFilters = true;
+
     let selectionChanged = false;
 
     const cfg = [
@@ -1043,12 +1468,24 @@
 
     const ctxE = document.getElementById("chartEstado");
     if (chartEstado) chartEstado.destroy();
-    const colorPorEstado = { "En Ejecución": "#9A3A6A", "Terminado": "#B86A2A" };
+
+    const colorPorEstado = {
+      "En Ejecución": "#9A3A6A",
+      "Terminado": "#B86A2A"
+    };
+
     const colores = estadoLabels.map(e => colorPorEstado[e] || "#999");
 
     chartEstado = new Chart(ctxE, {
       type:"doughnut",
-      data:{ labels:estadoLabels, datasets:[{ data:estadoValues, backgroundColor:colores, borderWidth:0 }] },
+      data:{
+        labels:estadoLabels,
+        datasets:[{
+          data:estadoValues,
+          backgroundColor:colores,
+          borderWidth:0
+        }]
+      },
       options:{
         responsive:true,
         maintainAspectRatio:false,
@@ -1063,9 +1500,18 @@
 
     const ctxQ = document.getElementById("chartEquipo");
     if (chartEquipo) chartEquipo.destroy();
+
     chartEquipo = new Chart(ctxQ, {
       type:"bar",
-      data:{ labels:equipoLabels, datasets:[{ label:"Contratos", data:equipoValues, backgroundColor:"#2BA7B5", borderRadius:8 }] },
+      data:{
+        labels:equipoLabels,
+        datasets:[{
+          label:"Contratos",
+          data:equipoValues,
+          backgroundColor:"#2BA7B5",
+          borderRadius:8
+        }]
+      },
       options:{
         responsive:true,
         maintainAspectRatio:false,
@@ -1088,6 +1534,7 @@
     const sel = el(selId);
     const root = document.querySelector(`.ms[data-for="${selId}"]`);
     if (!sel || !root) return;
+
     const btn = root.querySelector(".msBtn");
     const menu = root.querySelector(".msMenu");
 
@@ -1100,13 +1547,16 @@
 
     const renderMenu = () => {
       menu.innerHTML = "";
+
       const makeItem = (opt) => {
         const isSelected = opt.selected;
         const item = document.createElement("label");
         item.className = "msItem" + (isSelected ? " selected" : "");
         item.innerHTML = `<input type="checkbox" ${isSelected ? "checked" : ""}> <span>${opt.textContent}</span>`;
+
         item.addEventListener("click", (e)=>{
           e.preventDefault();
+
           if (opt.value === "Todos") {
             [...sel.options].forEach(o => o.selected = (o.value === "Todos"));
           } else {
@@ -1115,10 +1565,12 @@
             const any = [...sel.options].some(o => o.value !== "Todos" && o.selected);
             if (!any) [...sel.options].forEach(o => o.selected = (o.value === "Todos"));
           }
+
           renderMenu();
           setLabel();
           sel.dispatchEvent(new Event("change", { bubbles:true }));
         });
+
         return item;
       };
 
@@ -1145,7 +1597,9 @@
     document.querySelectorAll(".msBtn").forEach(b=>b.setAttribute("aria-expanded","false"));
   });
 
-  function fmtDate(s){ return s || "—"; }
+  function fmtDate(s){
+    return s || "—";
+  }
 
   function abrirHistorial(contratoId){
     const id = decodeURIComponent(String(contratoId || "")).trim();
@@ -1154,6 +1608,7 @@
 
     const overlay = el("modalOverlay");
     const body = el("modalBody");
+
     el("modalTitle").textContent = "Detalle del contrato";
     el("modalSub").textContent = `Contrato: ${r.contrato} · Año: ${r.ano ?? "—"} · Estado: ${r.estado || "—"}`;
 
@@ -1163,61 +1618,83 @@
     body.innerHTML = `
       <div class="detailCard">
         <h4>Información general</h4>
+
         <div class="kv">
           <div class="k">Contrato</div><div class="v mono">${r.contrato}</div>
           <div class="k">Equipo</div><div class="v">${r.equipo}</div>
-          <div class="k">Tipo</div><div class="v">${r.tipo}</div>
           <div class="k">Contratista</div><div class="v">${r.contratista}</div>
-          <div class="k">Estado</div><div class="v">${r.estado}</div>
-          <div class="k">Financiación</div><div class="v">${r.financiacion}</div>
           <div class="k">Objeto</div><div class="v">${r.objeto}</div>
-          <div class="k">Valor total</div><div class="v mono">${COP.format(Number(r.valor_total || 0))}</div>
-          <div class="k">Valor ejecutado</div><div class="v mono">${COP.format(Number(r.valor_ejecutado || 0))}</div>
-          <div class="k">% ejecución</div><div class="v mono">${pctTxt}</div>
+          <div class="k">Tipo</div><div class="v">${r.tipo}</div>
+          <div class="k">Financiación</div><div class="v">${r.financiacion}</div>
+          <div class="k">Estado</div><div class="v">${r.estado}</div>
           <div class="k">Fecha inicio</div><div class="v">${fmtDate(r.fecha_inicio)}</div>
           <div class="k">Fecha fin</div><div class="v">${fmtDate(r.fecha_fin)}</div>
-          <div class="k">Plazo</div><div class="v">${r.plazo || "—"}</div>
-          <div class="k">Prórroga</div><div class="v">${r.prorroga || "—"}</div>
+          <div class="k">Valor total</div><div class="v mono">${COP.format(Number(r.valor_total || 0))}</div>
+          <div class="k">Valor ejecutado</div><div class="v mono">${COP.format(Number(r.valor_ejecutado || 0))}</div>
+          <div class="k">Por ejecutar</div><div class="v mono">${COP.format(Number(r.valor_por_ejecutar || 0))}</div>
+
+          <div class="k">% ejecución</div>
+          <div class="v">
+            <div class="histPct">
+              <div class="histPctHead">
+                <span>% ejecución</span>
+                <span class="mono">${pctTxt}</span>
+              </div>
+              <div class="histPctTrack">
+                <div class="histPctFill" style="width:${pctTxt}"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="detailCard">
         <h4>Resumen</h4>
+
         <div class="timeline">
-          <div class="tlItem">
-            <div class="tlDate">Inicio</div>
-            <div class="tlBox">${fmtDate(r.fecha_inicio)}</div>
-          </div>
-          <div class="tlItem">
-            <div class="tlDate">Fin</div>
-            <div class="tlBox">${fmtDate(r.fecha_fin)}</div>
-          </div>
-          <div class="tlItem">
-            <div class="tlDate">Estado</div>
-            <div class="tlBox">${r.estado || "—"}</div>
-          </div>
-          <div class="tlItem">
-            <div class="tlDate">Ejecución</div>
-            <div class="tlBox">${pctTxt}</div>
-          </div>
+          <div class="tlItem"><div class="tlDate">Contrato</div><div class="tlBox mono">${r.contrato}</div></div>
+          <div class="tlItem"><div class="tlDate">Inicio</div><div class="tlBox">${fmtDate(r.fecha_inicio)}</div></div>
+          <div class="tlItem"><div class="tlDate">Fin</div><div class="tlBox">${fmtDate(r.fecha_fin)}</div></div>
+          <div class="tlItem"><div class="tlDate">Estado</div><div class="tlBox">${r.estado || "—"}</div></div>
+          <div class="tlItem"><div class="tlDate">Financiación</div><div class="tlBox">${r.financiacion || "—"}</div></div>
+          <div class="tlItem"><div class="tlDate">Tipo</div><div class="tlBox">${r.tipo || "—"}</div></div>
+        </div>
+
+        <h4 style="margin-top:16px;">Mapa de las obras del contrato</h4>
+        <div id="mapaHistorial"></div>
+        <div id="mapaHistorialEmpty" style="display:none; margin-top:12px; color:var(--muted); font-size:13px;">
+          Este contrato no tiene puntos geográficos disponibles.
         </div>
       </div>
     `;
 
     overlay.classList.add("show");
     overlay.setAttribute("aria-hidden", "false");
+
+    setTimeout(() => {
+      renderMapaHistorial(r.contrato);
+    }, 50);
   }
 
   function cerrarHistorial(){
     const overlay = el("modalOverlay");
+    if (!overlay) return;
+
     overlay.classList.remove("show");
     overlay.setAttribute("aria-hidden", "true");
+
+    if (mapaHistorial) {
+      mapaHistorial.remove();
+      mapaHistorial = null;
+      markersHistorial = null;
+    }
   }
 
   function resetearTodo(){
     ["filterEquipo","filterAno","filterEstado","filterContratista","filterFinanciacion"].forEach(id=>{
       const sel = el(id);
       [...sel.options].forEach(o => o.selected = (o.value === "Todos"));
+
       const root = document.querySelector(`.ms[data-for="${id}"]`);
       if (root && root._renderMenu) {
         root._renderMenu();
@@ -1229,6 +1706,7 @@
 
     if ([...el("filterAno").options].some(o => o.value === DEFAULT_ANO)) {
       [...el("filterAno").options].forEach(o => o.selected = (o.value === DEFAULT_ANO));
+
       const root = document.querySelector(`.ms[data-for="filterAno"]`);
       if (root && root._renderMenu) {
         root._renderMenu();
@@ -1263,6 +1741,7 @@
 
     if ([...el("filterAno").options].some(o => o.value === DEFAULT_ANO)) {
       [...el("filterAno").options].forEach(o => o.selected = (o.value === DEFAULT_ANO));
+
       const root = document.querySelector(`.ms[data-for="filterAno"]`);
       if (root && root._renderMenu) {
         root._renderMenu();
