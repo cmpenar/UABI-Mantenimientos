@@ -45,13 +45,18 @@
     header{
       position:sticky;
       top:0;
-      z-index:10;
+      z-index:100;
       background: var(--brand-blue);
       color:white;
       border-bottom:1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 8px 18px rgba(17,24,39,0.10);
     }
 
-    .wrap{max-width:1200px; margin:0 auto; padding:16px 18px;}
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:16px 18px;
+    }
 
     .top{
       display:flex;
@@ -61,7 +66,11 @@
       flex-wrap:wrap;
     }
 
-    .brand{display:flex; align-items:center; gap:12px;}
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
 
     .logo{
       width:40px;
@@ -77,8 +86,17 @@
       letter-spacing:0.5px;
     }
 
-    h1{margin:0; font-size:16px; letter-spacing:0.2px}
-    .sub{margin-top:3px; font-size:12px; color:rgba(255,255,255,0.85)}
+    h1{
+      margin:0;
+      font-size:16px;
+      letter-spacing:0.2px;
+    }
+
+    .sub{
+      margin-top:3px;
+      font-size:12px;
+      color:rgba(255,255,255,0.85);
+    }
 
     .filters{
       display:grid;
@@ -105,7 +123,7 @@
       padding:10px 12px;
       border:1px solid var(--stroke);
       background: var(--surface);
-      border-radius:14px;
+      border-radius:18px;
       box-shadow: 0 8px 18px rgba(0,0,0,0.08);
     }
 
@@ -119,7 +137,10 @@
       font-size:13px;
     }
 
-    input::placeholder{color: rgba(107,114,128,0.65); font-weight:400;}
+    input::placeholder{
+      color: rgba(107,114,128,0.65);
+      font-weight:400;
+    }
 
     .select .hint{
       font-size:12px;
@@ -128,7 +149,12 @@
       white-space:nowrap;
     }
 
-    main .wrap{padding-top:18px; padding-bottom:28px;}
+    main .wrap{
+      padding-top:34px;
+      padding-bottom:28px;
+      position:relative;
+      z-index:1;
+    }
 
     .kpis{
       display:grid;
@@ -139,13 +165,15 @@
     .card{
       background: var(--surface);
       border:1px solid var(--stroke);
-      border-radius:18px;
+      border-radius:24px;
       box-shadow: var(--shadow);
+      overflow:hidden;
     }
 
     .kpi{
       grid-column: span 3;
       padding:16px;
+      min-height:128px;
     }
 
     .kpi .label{
@@ -180,10 +208,12 @@
       align-items:stretch;
     }
 
-    @media (max-width: 980px){ .grid{grid-template-columns:1fr;} }
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr;}
+    }
 
     .panel{
-      padding:14px;
+      padding:18px;
       height:340px;
       min-height:340px;
       display:flex;
@@ -195,13 +225,16 @@
       min-height:auto;
     }
 
-    .panel h3{margin:0 0 10px; font-size:14px}
+    .panel h3{
+      margin:0 0 10px;
+      font-size:14px;
+    }
 
     .panel .meta{
       display:flex;
       justify-content:space-between;
       align-items:center;
-      margin-bottom:8px;
+      margin-bottom:12px;
       color:var(--muted);
       font-size:12px
     }
@@ -273,7 +306,10 @@
       flex-direction:column;
     }
 
-    .footer img{width:180px; opacity:0.95}
+    .footer img{
+      width:180px;
+      opacity:0.95;
+    }
 
     .toolbar{
       display:flex;
@@ -289,7 +325,7 @@
       gap:8px;
       border:none;
       padding:10px 14px;
-      border-radius:12px;
+      border-radius:16px;
       cursor:pointer;
       background: linear-gradient(135deg, var(--brand-purple), #8A49B6);
       color:white;
@@ -327,9 +363,12 @@
 
     #mapaGeneral{
       height:340px;
-      border-radius:14px;
+      border-radius:18px;
       overflow:hidden;
       border:1px solid var(--stroke);
+      position:relative;
+      z-index:1;
+      background:#fff;
     }
 
     .wrapCell{
@@ -338,7 +377,10 @@
       line-height:1.25
     }
 
-    .ms{position:relative; width:100%;}
+    .ms{
+      position:relative;
+      width:100%;
+    }
 
     .msBtn{
       width:100%;
@@ -359,7 +401,7 @@
       top:calc(100% + 8px);
       left:0;
       right:0;
-      z-index:50;
+      z-index:150;
       background:var(--menu-bg);
       color:var(--menu-text);
       border:1px solid var(--menu-border);
@@ -562,7 +604,7 @@
       gap:14px;
       align-items:center;
       flex-wrap:wrap;
-      margin-top:8px;
+      margin-top:12px;
       font-size:12px;
       color:var(--muted);
     }
@@ -1145,11 +1187,9 @@
 
   function getEstadoColor(estado){
     const e = cleanText(estado);
-
     if (e === "terminado") return "#B86A2A";
     if (e === "en ejecucion") return "#9A3A6A";
     if (e === "en ejecución") return "#9A3A6A";
-
     return "#2BA7B5";
   }
 
