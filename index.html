@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <style>
     :root{
       --brand-blue:#2BA7B5;
@@ -22,6 +23,10 @@
       --menu-border:rgba(17,24,39,0.12);
       --menu-hover:#F3F7F9;
       --menu-selected:#E8F7F9;
+
+      --estado-terminado:#B86A2A;
+      --estado-ejecucion:#9A3A6A;
+      --estado-default:#2BA7B5;
     }
 
     *{box-sizing:border-box}
@@ -185,6 +190,11 @@
       flex-direction:column;
     }
 
+    .panel.h-auto{
+      height:auto;
+      min-height:auto;
+    }
+
     .panel h3{margin:0 0 10px; font-size:14px}
 
     .panel .meta{
@@ -316,15 +326,15 @@
     }
 
     #mapaGeneral{
-      height: 340px;
+      height:340px;
       border-radius:14px;
       overflow:hidden;
       border:1px solid var(--stroke);
     }
 
     .wrapCell{
-      max-width: 360px;
-      white-space: normal;
+      max-width:360px;
+      white-space:normal;
       line-height:1.25
     }
 
@@ -446,7 +456,9 @@
       gap:16px;
     }
 
-    @media (max-width: 900px){ .modalBody{grid-template-columns:1fr;} }
+    @media (max-width: 900px){
+      .modalBody{grid-template-columns:1fr;}
+    }
 
     .detailCard{
       border:1px solid var(--stroke);
@@ -543,6 +555,30 @@
       overflow:hidden;
       border:1px solid var(--stroke);
       margin-top:12px;
+    }
+
+    .legendEstados{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-top:8px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .legendItem{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .legendDot{
+      width:12px;
+      height:12px;
+      border-radius:999px;
+      border:1px solid rgba(17,24,39,0.10);
+      display:inline-block;
     }
   </style>
 </head>
@@ -670,9 +706,19 @@
         <span id="badgeMapa">0 puntos</span>
       </div>
       <div id="mapaGeneral"></div>
+      <div class="legendEstados">
+        <div class="legendItem">
+          <span class="legendDot" style="background:#B86A2A"></span>
+          <span>Terminado</span>
+        </div>
+        <div class="legendItem">
+          <span class="legendDot" style="background:#9A3A6A"></span>
+          <span>En Ejecución</span>
+        </div>
+      </div>
     </section>
 
-    <section class="card panel tableWrap" style="height:auto; min-height:auto;">
+    <section class="card panel h-auto tableWrap">
       <div class="meta">
         <h3>Tabla de contratos</h3>
         <span id="badgeTabla">0 filas</span>
@@ -723,7 +769,17 @@
   let data = [];
   let pointsData = [];
 
-  function el(id){ return document.getElementById(id); }
+  let mapaGeneral;
+  let markersLayer;
+  let chartEstado, chartEquipo;
+  let mapaHistorial = null;
+  let markersHistorial = null;
+
+  const DEFAULT_ANO = "2025";
+
+  function el(id){
+    return document.getElementById(id);
+  }
 
   const COP = new Intl.NumberFormat("es-CO", {
     style:"currency",
@@ -1087,20 +1143,24 @@
       );
   }
 
-  let mapaGeneral;
-  let markersLayer;
-  let chartEstado, chartEquipo;
-  let mapaHistorial = null;
-  let markersHistorial = null;
+  function getEstadoColor(estado){
+    const e = cleanText(estado);
 
-  const DEFAULT_ANO = "2025";
+    if (e === "terminado") return "#B86A2A";
+    if (e === "en ejecucion") return "#9A3A6A";
+    if (e === "en ejecución") return "#9A3A6A";
+
+    return "#2BA7B5";
+  }
 
   function initMap(){
     mapaGeneral = L.map("mapaGeneral", { scrollWheelZoom:true }).setView([6.2442, -75.5812], 11);
+
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
+      attribution: "&copy; OpenStreetMap"
     }).addTo(mapaGeneral);
+
     markersLayer = L.layerGroup().addTo(mapaGeneral);
   }
 
@@ -1129,12 +1189,14 @@
       });
 
     puntos.forEach(r => {
+      const colorEstado = getEstadoColor(r.estado);
+
       const marker = L.circleMarker([r.lat, r.lon], {
-        radius: 7,
-        weight: 1,
+        radius: 8,
+        weight: 2,
         color: "#ffffff",
-        fillColor: "#2BA7B5",
-        fillOpacity: 0.9
+        fillColor: colorEstado,
+        fillOpacity: 0.95
       }).bindPopup(`
         <strong>Contrato:</strong> ${r.contrato}<br>
         <strong>Equipo:</strong> ${r.equipo}<br>
@@ -1147,6 +1209,7 @@
         <strong>Valor total:</strong> ${COP.format(Number(r.valor_total || 0))}<br>
         <strong>% ejecución:</strong> ${(Number(r.pct_ejecucion || 0) * 100).toFixed(1)}%
       `);
+
       markersLayer.addLayer(marker);
     });
 
@@ -1181,6 +1244,9 @@
     mapWrap.style.display = "block";
     if (emptyWrap) emptyWrap.style.display = "none";
 
+    const contratoData = data.find(d => cleanText(d.contrato) === cleanText(contrato));
+    const colorEstado = getEstadoColor(contratoData?.estado);
+
     if (!mapaHistorial) {
       mapaHistorial = L.map("mapaHistorial", {
         zoomControl: true,
@@ -1199,18 +1265,20 @@
 
     puntos.forEach(p => {
       const marker = L.circleMarker([p.lat, p.lon], {
-        radius: 7,
-        weight: 1,
+        radius: 8,
+        weight: 2,
         color: "#ffffff",
-        fillColor: "#2BA7B5",
+        fillColor: colorEstado,
         fillOpacity: 0.95
       }).bindPopup(`
         <strong>Contrato:</strong> ${contrato}<br>
+        ${contratoData?.estado ? `<strong>Estado:</strong> ${contratoData.estado}<br>` : ""}
         ${p.nombre_punto ? `<strong>Punto:</strong> ${p.nombre_punto}<br>` : ""}
         ${p.direccion ? `<strong>Dirección:</strong> ${p.direccion}<br>` : ""}
         ${p.barrio ? `<strong>Barrio:</strong> ${p.barrio}<br>` : ""}
         ${p.comuna ? `<strong>Comuna:</strong> ${p.comuna}<br>` : ""}
       `);
+
       markersHistorial.addLayer(marker);
     });
 
@@ -1560,10 +1628,14 @@
           if (opt.value === "Todos") {
             [...sel.options].forEach(o => o.selected = (o.value === "Todos"));
           } else {
-            [...sel.options].forEach(o => { if (o.value === "Todos") o.selected = false; });
+            [...sel.options].forEach(o => {
+              if (o.value === "Todos") o.selected = false;
+            });
             opt.selected = !opt.selected;
             const any = [...sel.options].some(o => o.value !== "Todos" && o.selected);
-            if (!any) [...sel.options].forEach(o => o.selected = (o.value === "Todos"));
+            if (!any) {
+              [...sel.options].forEach(o => o.selected = (o.value === "Todos"));
+            }
           }
 
           renderMenu();
@@ -1582,7 +1654,9 @@
 
     btn.addEventListener("click", (e)=>{
       e.stopPropagation();
-      document.querySelectorAll(".ms.open").forEach(x=>{ if (x !== root) x.classList.remove("open"); });
+      document.querySelectorAll(".ms.open").forEach(x=>{
+        if (x !== root) x.classList.remove("open");
+      });
       root.classList.toggle("open");
       btn.setAttribute("aria-expanded", root.classList.contains("open") ? "true" : "false");
       renderMenu();
@@ -1664,6 +1738,16 @@
         <div id="mapaHistorial"></div>
         <div id="mapaHistorialEmpty" style="display:none; margin-top:12px; color:var(--muted); font-size:13px;">
           Este contrato no tiene puntos geográficos disponibles.
+        </div>
+        <div class="legendEstados">
+          <div class="legendItem">
+            <span class="legendDot" style="background:#B86A2A"></span>
+            <span>Terminado</span>
+          </div>
+          <div class="legendItem">
+            <span class="legendDot" style="background:#9A3A6A"></span>
+            <span>En Ejecución</span>
+          </div>
         </div>
       </div>
     `;
